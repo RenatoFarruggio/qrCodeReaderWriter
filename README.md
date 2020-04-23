@@ -1,0 +1,1 @@
+# qrCodeReaderWriter\TODO
