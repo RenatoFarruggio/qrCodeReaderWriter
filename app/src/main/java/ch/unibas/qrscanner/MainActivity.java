@@ -8,6 +8,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import ch.unibas.qrscanner.intenthelper.IntentIntegrator;
+
 public class MainActivity extends AppCompatActivity {
 
     public static TextView resultTextView;
@@ -26,7 +28,15 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
+                // Using back camera
                 startActivity(new Intent(getApplicationContext(), ScanCodeActivity.class));
+
+                // Using front camera   // to be continued....
+                // if we do not use this, remove the intenthelper package!!
+                //IntentIntegrator integrator = new IntentIntegrator();
+                //integrator.setCameraId(1);
+                //integrator.initiateScan();
+                //startActivity(new Intent(getApplicationContext(), ScanCodeActivity.class).putExtra("SCAN_CAMERA_ID", 1));
             }
         });
     }
