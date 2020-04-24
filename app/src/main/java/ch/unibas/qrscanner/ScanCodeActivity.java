@@ -63,6 +63,6 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         super.onResume();
 
         scannerView.setResultHandler(this);
-        scannerView.startCamera();
+        scannerView.startCamera(1);
     }
 }
