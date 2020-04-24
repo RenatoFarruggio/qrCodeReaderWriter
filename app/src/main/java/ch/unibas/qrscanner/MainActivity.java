@@ -9,8 +9,6 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import ch.unibas.qrscanner.intenthelper.IntentIntegrator;
-
 public class MainActivity extends AppCompatActivity {
 
     public static TextView resultTextView;
@@ -30,18 +28,7 @@ public class MainActivity extends AppCompatActivity {
         scanButton.setOnClickListener(new View.OnClickListener()  {
             @Override
             public void onClick(View view) {
-
-                // Using back camera
                 startActivity(new Intent(getApplicationContext(), ScanCodeActivity.class));
-
-                /* to be continued....
-                // Using front camera
-                // if we do not use this, remove the intenthelper package!!
-                IntentIntegrator integrator = new IntentIntegrator();
-                integrator.setCameraId(1);
-                integrator.initiateScan();
-                startActivity(new Intent(getApplicationContext(), ScanCodeActivity.class).putExtra("SCAN_CAMERA_ID", 1));
-                 */
             }
         });
     }
