@@ -2,7 +2,7 @@
 
 ## TODO:
 * ~~Access front camera~~
-* Implement [asking user for permission to use camera](https://github.com/ParkSangGwon/TedPermission)
+* ~~Implement [asking user for permission to use camera](https://github.com/ParkSangGwon/TedPermission)~~
 * ~~Test if QR code gets recognized through front camera~~ (It does!)
 * ~~Implement beep sound as feedback for qr code recognition~~
 * ~~Disable screen rotation~~
