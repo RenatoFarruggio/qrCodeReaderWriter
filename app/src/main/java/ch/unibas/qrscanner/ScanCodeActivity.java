@@ -2,11 +2,13 @@ package ch.unibas.qrscanner;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.Dialog;
 import android.graphics.Bitmap;
 import android.media.AudioManager;
 import android.media.ToneGenerator;
 import android.os.Bundle;
-import android.util.AndroidException;
+import android.view.Window;
+import android.widget.ImageView;
 
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.MultiFormatWriter;
@@ -21,7 +23,10 @@ import com.journeyapps.barcodescanner.BarcodeEncoder;
 public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerView.ResultHandler {
 
     ZXingScannerView scannerView;
-    ToneGenerator toneG;
+    ToneGenerator toneGenerator;
+    Dialog settingsDialog;
+    ImageView popupImageView;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,17 +34,25 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         scannerView = new ZXingScannerView(this);
         setContentView(scannerView);
 
-        toneG = new ToneGenerator(AudioManager.STREAM_ALARM, 100);
+
+        toneGenerator = new ToneGenerator(AudioManager.STREAM_ALARM, 100);
+
+        settingsDialog = new Dialog(this);
+        settingsDialog.getWindow().requestFeature(Window.FEATURE_NO_TITLE);
+        settingsDialog.setContentView(getLayoutInflater().inflate(R.layout.image_layout, null));
+        settingsDialog.setCanceledOnTouchOutside(false);
+        settingsDialog.show();
+
+        popupImageView = settingsDialog.findViewById(R.id.popupImageView);
 
     }
 
     @Override
     public void handleResult(Result result) {
 
+        toneGenerator.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 200);
 
-        toneG.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 200);
-
-        MainActivity.resultTextView.setText(result.getText());
+        //MainActivity.resultTextView.setText(result.getText());
 
 
         // Initially copied from:
@@ -48,15 +61,18 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         String text=result.getText();
         MultiFormatWriter multiFormatWriter = new MultiFormatWriter();
         try {
-            BitMatrix bitMatrix = multiFormatWriter.encode(text, BarcodeFormat.QR_CODE,200,200);
+            BitMatrix bitMatrix = multiFormatWriter.encode(text, BarcodeFormat.QR_CODE,400,400);
             BarcodeEncoder barcodeEncoder = new BarcodeEncoder();
             Bitmap bitmap = barcodeEncoder.createBitmap(bitMatrix);
-            MainActivity.qrImageView.setImageBitmap(bitmap);
+            //MainActivity.qrImageView.setImageBitmap(bitmap);
+            popupImageView.setImageBitmap(bitmap);
         } catch (WriterException e) {
             e.printStackTrace();
         }
 
-        onBackPressed();
+        onPause();
+        onResume();
+        //onBackPressed();
     }
 
     @Override
