@@ -2,12 +2,23 @@ package ch.unibas.qrscanner;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.Manifest;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.gun0912.tedpermission.PermissionListener;
+import com.gun0912.tedpermission.TedPermission;
+import com.gun0912.tedpermission.TedPermissionResult;
+import com.tedpark.tedpermission.rx2.TedRx2Permission;
+
+import java.util.List;
+
+import io.reactivex.functions.Consumer;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -31,5 +42,42 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(new Intent(getApplicationContext(), ScanCodeActivity.class));
             }
         });
+
+        // PERMISSION STUFF //
+        PermissionListener permissionlistener = new PermissionListener() {
+            @Override
+            public void onPermissionGranted() {
+                Toast.makeText(MainActivity.this, "Permission Granted", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onPermissionDenied(List<String> deniedPermissions) {
+                Toast.makeText(MainActivity.this, "Permission Denied\n" + deniedPermissions.toString(), Toast.LENGTH_SHORT).show();
+            }
+
+
+        };
+
+        TedRx2Permission.with(this)
+                .setRationaleTitle("Camera permission")
+                .setRationaleMessage("We need permission to use the camera in order for the app to work properly.") // "we need permission for read contact and find your location"
+                .setPermissions(Manifest.permission.CAMERA)
+                .request()
+                .subscribe(new Consumer<TedPermissionResult>() {
+                    @Override
+                    public void accept(TedPermissionResult tedPermissionResult) throws Exception {
+                        if (tedPermissionResult.isGranted()) {
+                            Toast.makeText(MainActivity.this, "Permission Granted", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(MainActivity.this,
+                                    "Permission Denied\n" + tedPermissionResult.getDeniedPermissions().toString(), Toast.LENGTH_SHORT)
+                                    .show();
+                        }
+                    }
+                }, new Consumer<Throwable>() {
+                    @Override
+                    public void accept(Throwable throwable) throws Exception {
+                    }
+                });
     }
 }
