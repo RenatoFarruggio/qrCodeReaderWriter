@@ -7,6 +7,7 @@ import android.graphics.Bitmap;
 import android.media.AudioManager;
 import android.media.ToneGenerator;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.view.Window;
 import android.widget.ImageView;
 
@@ -50,7 +51,8 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
     @Override
     public void handleResult(Result result) {
 
-        toneGenerator.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 200);
+        toneGenerator.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 400);
+        SystemClock.sleep(1000);
 
         //MainActivity.resultTextView.setText(result.getText());
 
@@ -59,9 +61,22 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         // https://medium.com/@aanandshekharroy/generate-barcode-in-android-app-using-zxing-64c076a5d83a
 
         String text=result.getText();
+        int num = Integer.parseInt(text);
+        String outText = (num+1)+"";
+        for (int i = 0; i < num; i++) {
+            toneGenerator.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 100);
+            SystemClock.sleep(200);
+        }
+        if (num >= 10) {
+            SystemClock.sleep(1000);
+            toneGenerator.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 1000);
+            onBackPressed();
+        }
+
         MultiFormatWriter multiFormatWriter = new MultiFormatWriter();
         try {
-            BitMatrix bitMatrix = multiFormatWriter.encode(text, BarcodeFormat.QR_CODE,400,400);
+            BitMatrix bitMatrix = multiFormatWriter.encode(outText, BarcodeFormat.QR_CODE,800,800);
+            bitMatrix.rotate180();
             BarcodeEncoder barcodeEncoder = new BarcodeEncoder();
             Bitmap bitmap = barcodeEncoder.createBitmap(bitMatrix);
             //MainActivity.qrImageView.setImageBitmap(bitmap);
