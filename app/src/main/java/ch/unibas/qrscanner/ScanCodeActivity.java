@@ -21,11 +21,13 @@ import me.dm7.barcodescanner.zxing.ZXingScannerView;
 
 import com.journeyapps.barcodescanner.BarcodeEncoder;
 
+
 public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerView.ResultHandler {
+
 
     ZXingScannerView scannerView;
     ToneGenerator toneGenerator;
-    Dialog settingsDialog;
+    Dialog qrPopupDialog;
     ImageView popupImageView;
 
 
@@ -35,47 +37,67 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         scannerView = new ZXingScannerView(this);
         setContentView(scannerView);
 
-
         toneGenerator = new ToneGenerator(AudioManager.STREAM_ALARM, 100);
 
-        settingsDialog = new Dialog(this);
-        settingsDialog.getWindow().requestFeature(Window.FEATURE_NO_TITLE);
-        settingsDialog.setContentView(getLayoutInflater().inflate(R.layout.image_layout, null));
-        settingsDialog.setCanceledOnTouchOutside(false);
-        settingsDialog.show();
+        qrPopupDialog = new Dialog(this);
+        qrPopupDialog.getWindow().requestFeature(Window.FEATURE_NO_TITLE);
+        qrPopupDialog.setContentView(getLayoutInflater().inflate(R.layout.image_layout, null));
+        qrPopupDialog.setCanceledOnTouchOutside(false);
+        qrPopupDialog.show();
 
-        popupImageView = settingsDialog.findViewById(R.id.popupImageView);
+        popupImageView = qrPopupDialog.findViewById(R.id.popupImageView);
 
+        // Initialize QR code
+        setTextToPopupImageView("0");
     }
 
     @Override
     public void handleResult(Result result) {
-
-        toneGenerator.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 400);
-        SystemClock.sleep(1000);
-
+        playBeep(500, 500);
         //MainActivity.resultTextView.setText(result.getText());
 
 
-        // Initially copied from:
-        // https://medium.com/@aanandshekharroy/generate-barcode-in-android-app-using-zxing-64c076a5d83a
 
-        String text=result.getText();
+        // Actually handle the result //
+        String outText = handleResultByCounting(result.getText());
+        //String outText = handleResultBySyncingLog(result.getText());
+
+
+
+        setTextToPopupImageView(outText);
+
+        // These commands are needed to prevent the camera from freezing
+        onPause();
+        onResume();
+    }
+
+    private String handleResultBySyncingLog(String text) {
+        // TODO: implement this
+
+        return "";
+    }
+
+    private String handleResultByCounting(String text) {
         int num = Integer.parseInt(text);
         String outText = (num+1)+"";
+
         for (int i = 0; i < num; i++) {
-            toneGenerator.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 100);
-            SystemClock.sleep(200);
-        }
-        if (num >= 10) {
-            SystemClock.sleep(1000);
-            toneGenerator.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 1000);
-            onBackPressed();
+            playBeep(100, 100);
         }
 
+        if (num >= 10) {
+            playBeep(1000, 0);
+            onBackPressed();
+        }
+        return outText;
+    }
+
+    private void setTextToPopupImageView(String text) {
+        // Initially copied from:
+        // https://medium.com/@aanandshekharroy/generate-barcode-in-android-app-using-zxing-64c076a5d83a
         MultiFormatWriter multiFormatWriter = new MultiFormatWriter();
         try {
-            BitMatrix bitMatrix = multiFormatWriter.encode(outText, BarcodeFormat.QR_CODE,800,800);
+            BitMatrix bitMatrix = multiFormatWriter.encode(text, BarcodeFormat.QR_CODE, 800, 800);
             bitMatrix.rotate180();
             BarcodeEncoder barcodeEncoder = new BarcodeEncoder();
             Bitmap bitmap = barcodeEncoder.createBitmap(bitMatrix);
@@ -84,10 +106,17 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         } catch (WriterException e) {
             e.printStackTrace();
         }
+    }
 
-        onPause();
-        onResume();
-        //onBackPressed();
+    private void playBeep(int playLengthInMilliseconds, int pauseLengthInMilliseconds) {
+        playBeep(playLengthInMilliseconds);
+        SystemClock.sleep(pauseLengthInMilliseconds);
+    }
+
+    private void playBeep(int playLengthInMilliseconds) {
+        toneGenerator.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD);
+        SystemClock.sleep(playLengthInMilliseconds);
+        toneGenerator.stopTone();
     }
 
     @Override
