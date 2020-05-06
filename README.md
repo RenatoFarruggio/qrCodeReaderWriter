@@ -9,6 +9,7 @@
 * ~~Implement [Android Image Dialog/Popup](https://stackoverflow.com/questions/7693633/android-image-dialog-popup) and test if it works as expected.~~
 * ~~In case, above Image Dialog does not work, find another way to display qr code while having the camera open.~~
 * ~~Implement dialog over qr code~~
+* CBOR to QR converter
 * Make qr code size adaptive to screen size (maximal but not bigger than screen)
 * Implement packet splitting
 * Find out how many bps we can send
