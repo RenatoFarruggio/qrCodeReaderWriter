@@ -64,11 +64,14 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
 
 
-        setTextToPopupImageView(outText);
 
         // These commands are needed to prevent the camera from freezing
         onPause();
         onResume();
+
+
+        // Write text into QR code
+        setTextToPopupImageView(outText);
     }
 
     private String handleResultBySyncingLog(String text) {
