@@ -101,7 +101,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         MultiFormatWriter multiFormatWriter = new MultiFormatWriter();
         try {
             BitMatrix bitMatrix = multiFormatWriter.encode(text, BarcodeFormat.QR_CODE, 800, 800);
-            bitMatrix.rotate180();
+            //bitMatrix.rotate180();
             BarcodeEncoder barcodeEncoder = new BarcodeEncoder();
             Bitmap bitmap = barcodeEncoder.createBitmap(bitMatrix);
             //MainActivity.qrImageView.setImageBitmap(bitmap);
