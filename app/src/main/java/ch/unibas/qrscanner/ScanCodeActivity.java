@@ -21,6 +21,8 @@ import me.dm7.barcodescanner.zxing.ZXingScannerView;
 
 import com.journeyapps.barcodescanner.BarcodeEncoder;
 
+import java.util.Arrays;
+
 
 public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerView.ResultHandler {
 
@@ -29,6 +31,9 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
     ToneGenerator toneGenerator;
     Dialog qrPopupDialog;
     ImageView popupImageView;
+
+
+    int lastNum = 0;
 
 
     @Override
@@ -48,7 +53,8 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         popupImageView = qrPopupDialog.findViewById(R.id.popupImageView);
 
         // Initialize QR code
-        setTextToPopupImageView("0");
+        int initialCode = 0;
+        setTextToPopupImageView(getStringOfByteSize(200, initialCode));
     }
 
     @Override
@@ -59,7 +65,8 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
 
         // Actually handle the result //
-        String outText = handleResultByCounting(result.getText());
+        //String outText = handleResultByCounting(result.getText());
+        String outText = handleResultByCountingInLargePackets(result.getText());
         //String outText = handleResultBySyncingLog(result.getText());
 
 
@@ -93,6 +100,29 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
             onBackPressed();
         }
         return outText;
+    }
+
+    private String handleResultByCountingInLargePackets(String text) {
+        int num = text.charAt(text.length()-1);
+        String outTextLargePacket = text;
+        if (num>lastNum) {
+            lastNum++;
+            //String outText = (num+1)+"";
+            outTextLargePacket = getStringOfByteSize(text.length(), num + 1);
+
+            for (int i = 0; i < 2; i++) {
+                playBeep(100, 0);
+            }
+
+            if (num >= 8) {
+                playBeep(1000, 0);
+                MainActivity.resultTextView.setText("Done!");
+                onBackPressed();
+            }
+        } else {
+            playBeep(10,200);
+        }
+        return outTextLargePacket;
     }
 
     private void setTextToPopupImageView(String text) {
@@ -136,4 +166,29 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         scannerView.setResultHandler(this);
         scannerView.startCamera(1);
     }
+
+
+    //// THIS SECTION IS FOR DEV TESTING PURPOSES ONLY ////
+
+    // Return a string of a certain bytesize.
+    // 1 char (utf-16) needs 2 bytes.
+    private String getStringOfByteSize(int size, int code) {
+        // Must have: size >= 1
+
+
+        char[] chars = new char[size-1];
+        Arrays.fill(chars, 'a');
+        //chars[chars.length-1] = (char) code;
+        String text = new String(chars) + code;
+
+        //Log.d("ScanCodeActivity", "whole object: " + text);
+        //Log.d("ScanCodeActivity", "utf-8: " + text.getBytes(StandardCharsets.UTF_8));
+        //Log.d("ScanCodeActivity", "utf-16: " + text.getBytes(StandardCharsets.UTF_16));
+        //Log.d("ScanCodeActivity", "byteSize: " + text.getBytes(StandardCharsets.UTF_8).length);
+        //Log.d("ScanCodeActivity", "code: " + text.charAt(size-1));
+        return text;
+    }
+
+    ///////////////////////////////////////////////////////
+
 }
