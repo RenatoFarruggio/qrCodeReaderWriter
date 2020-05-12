@@ -14,7 +14,7 @@
 * Make qr code size adaptive to screen size (maximal but not bigger than screen)
 * ~~Implement packet splitting (doesn't seem like we need that)~~
 * ~~Find out how many bps we can send (around 500bytes/packet, maybe up to 2k) should be fine !~~
-* Add [Chaquopy](https://chaquo.com/chaquopy/) to our project to run python files
+* ~~Add [Chaquopy](https://chaquo.com/chaquopy/) to our project to run python files~~
 * Fix __fatal__ bug: Chaquopy can't import python library "cbor2"
 * If Chaquopy works as exspected, add it to the documentation over on [BACnet](https://github.com/cn-uofbasel/BACnet/tree/master/groups/02-soundLink)
 * Figure out how to use the [eventCreationTool](https://github.com/cn-uofbasel/BACnet/tree/master/groups/04-logMerge/eventCreationTool) on Android
