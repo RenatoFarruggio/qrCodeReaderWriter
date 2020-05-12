@@ -22,7 +22,7 @@ android {
             //version "3.8.1"
             buildPython "C:/Users/renat/AppData/Local/Programs/Python/Python38-32/python.exe"
             pip {
-                install "cbor2"
+                install "cbor"
                 install "pynacl"
             }
         }

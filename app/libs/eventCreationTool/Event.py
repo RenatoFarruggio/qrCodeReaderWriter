@@ -2,7 +2,7 @@
 # Authors: Günes Aydin, Joey Zgraggen, Nikodem Kernbach
 # VERSION: 1.0
 
-import cbor2
+import cbor
 
 
 class Meta:
