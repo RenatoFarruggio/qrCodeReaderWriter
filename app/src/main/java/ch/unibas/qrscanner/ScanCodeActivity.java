@@ -113,21 +113,21 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         int num = text.charAt(text.length()-1);
         String outTextLargePacket = text;
         if (num>lastNum) {
-            lastNum++;
+            lastNum = num;
             //String outText = (num+1)+"";
             outTextLargePacket = getStringOfByteSize(text.length(), num + 1);
 
             for (int i = 0; i < 2; i++) {
-                playBeep(100, 0);
+                playBeep(900, 100);
             }
 
             if (num >= 8) {
-                playBeep(1000, 0);
+                playBeep(5000, 0);
                 MainActivity.resultTextView.setText("Done!");
                 onBackPressed();
             }
         } else {
-            playBeep(10,200);
+            playBeep(2900,100);
         }
         return outTextLargePacket;
     }
