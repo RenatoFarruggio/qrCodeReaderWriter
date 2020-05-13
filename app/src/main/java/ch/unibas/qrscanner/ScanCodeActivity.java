@@ -11,6 +11,8 @@ import android.os.SystemClock;
 import android.view.Window;
 import android.widget.ImageView;
 
+import com.chaquo.python.Python;
+import com.chaquo.python.android.AndroidPlatform;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.Result;
@@ -55,6 +57,11 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         // Initialize QR code
         int initialCode = 0;
         setTextToPopupImageView(getStringOfByteSize(200, initialCode));
+
+        // Start Python
+        if (! Python.isStarted()) {
+            Python.start(new AndroidPlatform(this));
+        }
     }
 
     @Override

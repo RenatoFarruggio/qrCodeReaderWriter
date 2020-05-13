@@ -11,8 +11,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.chaquo.python.Python;
-import com.chaquo.python.android.AndroidPlatform;
 import com.gun0912.tedpermission.TedPermissionResult;
 import com.tedpark.tedpermission.rx2.TedRx2Permission;
 
@@ -40,12 +38,6 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(new Intent(getApplicationContext(), ScanCodeActivity.class));
             }
         });
-
-        // START PYTHON STUFF //
-
-        if (! Python.isStarted()) {
-            Python.start(new AndroidPlatform(this));
-        }
 
         // PERMISSION STUFF //
 
