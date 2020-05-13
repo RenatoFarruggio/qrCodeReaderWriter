@@ -17,5 +17,5 @@
 * ~~Add [Chaquopy](https://chaquo.com/chaquopy/) to our project to run python files~~
 * ~~Fix __fatal__ bug: Chaquopy can't import python library "cbor2" (Fix by downgrading to cbor)~~
 * If Chaquopy works as exspected, add it to the documentation over on [BACnet](https://github.com/cn-uofbasel/BACnet/tree/master/groups/02-soundLink)
-* Figure out how to use the [eventCreationTool](https://github.com/cn-uofbasel/BACnet/tree/master/groups/04-logMerge/eventCreationTool) on our android app.
+* Figure out how to use the [eventCreationTool](https://github.com/cn-uofbasel/BACnet/tree/master/groups/04-logMerge/eventCreationTool) on our android app, according to [this](https://chaquo.com/chaquopy/doc/current/java.html).
 * __SPECIFY INTERFACE WITH GROUP 12 (syncLog).__ In the ideal case, we can import their code like the eventCreationTool above.
