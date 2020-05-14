@@ -8,9 +8,12 @@ import android.media.AudioManager;
 import android.media.ToneGenerator;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.util.Log;
 import android.view.Window;
 import android.widget.ImageView;
 
+import com.chaquo.python.Kwarg;
+import com.chaquo.python.PyObject;
 import com.chaquo.python.Python;
 import com.chaquo.python.android.AndroidPlatform;
 import com.google.zxing.BarcodeFormat;
@@ -23,7 +26,10 @@ import me.dm7.barcodescanner.zxing.ZXingScannerView;
 
 import com.journeyapps.barcodescanner.BarcodeEncoder;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+
+// Python imports
 
 
 public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerView.ResultHandler {
@@ -38,7 +44,6 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
     Python py;
     PyObject eventCreationTool;
     PyObject eventCreationToolFactory;
-
 
     int lastNum = 0;
 
@@ -63,12 +68,12 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
         // Initialize QR code
         int initialCode = 0;
-        setTextToPopupImageView(getStringOfByteSize(200, initialCode));
+        //setTextToPopupImageView(getStringOfByteSize(200, initialCode));
+        setTextToPopupImageView("0");
 
-        // Start Python
-        if (! Python.isStarted()) {
-            Python.start(new AndroidPlatform(this));
-        }
+        // Initialize Python
+        initializePython();
+
     }
 
     @Override
@@ -79,13 +84,15 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
 
         // Actually handle the result //
-        //String outText = handleResultByCounting(result.getText());
-        String outText = handleResultByCountingInLargePackets(result.getText());
+        String outText = handleResultByCounting(result.getText());
+        //String outText = handleResultByCountingInLargePackets(result.getText());
+        //String outText = handleResultByCountingInDatabase(result.getText());
         //String outText = handleResultBySyncingLog(result.getText());
 
 
 
 
+        // TODO: optimize this (maybe remove it?)
         // These commands are needed to prevent the camera from freezing
         onPause();
         onResume();
@@ -137,6 +144,63 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
             playBeep(2900,100);
         }
         return outTextLargePacket;
+    }
+
+    private String handleResultByCountingInDatabase(String text) {
+        int num = text.charAt(text.length()-1);
+        String outTextLargePacket = text;
+        if (num>lastNum) {
+            lastNum = num;
+            //String outText = (num+1)+"";
+            outTextLargePacket = getStringOfByteSize(text.length(), num + 1);
+
+            for (int i = 0; i < 2; i++) {
+                playBeep(900, 100);
+            }
+
+            if (num >= 8) {
+                playBeep(5000, 0);
+                MainActivity.resultTextView.setText("Done!");
+                onBackPressed();
+            }
+        } else {
+            playBeep(2900,100);
+        }
+        return outTextLargePacket;
+    }
+
+    private void initializePython() {
+
+        // Start Python
+        if (! Python.isStarted()) {
+            Python.start(new AndroidPlatform(this));
+        }
+
+        // Get python instance
+        py = Python.getInstance();
+        Log.d("ScanCodeActivity", "Python is: " + py);
+
+        // Python equivalent to
+        //  "import EventCreationTool"
+        eventCreationTool = py.getModule("EventCreationTool");
+        Log.d("ScanCodeActivity", "EventCreationTool is: " + eventCreationTool);
+
+        // Python equivalent to
+        //  "ecf = EventCreationTool.EventFactory()"
+        eventCreationToolFactory = eventCreationTool.get("EventFactory");
+        Log.d("ScanCodeActivity", "ectFactory is: " + eventCreationToolFactory);
+
+        // TODO: fixme
+        // Python equivalent to
+        //  "new_event = ecf.next_event(content_identifier, content_parameter)"
+
+        //PyObject new_event = eventCreationToolFactory.get("next_event", "yourownapp/firstcommand", "content_parameter_42");
+
+        //byte[] commandInBytes = "yourownapp/firstcommand".getBytes(StandardCharsets.UTF_8);
+        //byte[] paramsInBytes = "content_parameter_42".getBytes(StandardCharsets.UTF_8);
+        //PyObject new_event = eventCreationToolFactory.call("next_event", new Kwarg("content_identifier", commandInBytes) , new Kwarg("content_parameter", paramsInBytes));
+
+        //Log.d("ScanCodeActivity", "new_event is: " + new_event);
     }
 
     private void setTextToPopupImageView(String text) {
