@@ -33,6 +33,11 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
     ToneGenerator toneGenerator;
     Dialog qrPopupDialog;
     ImageView popupImageView;
+    int qrSize;
+
+    Python py;
+    PyObject eventCreationTool;
+    PyObject eventCreationToolFactory;
 
 
     int lastNum = 0;
@@ -53,6 +58,8 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         qrPopupDialog.show();
 
         popupImageView = qrPopupDialog.findViewById(R.id.popupImageView);
+
+        qrSize = getResources().getDisplayMetrics().widthPixels;
 
         // Initialize QR code
         int initialCode = 0;
@@ -137,7 +144,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         // https://medium.com/@aanandshekharroy/generate-barcode-in-android-app-using-zxing-64c076a5d83a
         MultiFormatWriter multiFormatWriter = new MultiFormatWriter();
         try {
-            BitMatrix bitMatrix = multiFormatWriter.encode(text, BarcodeFormat.QR_CODE, 800, 800);
+            BitMatrix bitMatrix = multiFormatWriter.encode(text, BarcodeFormat.QR_CODE, qrSize, qrSize);
             //bitMatrix.rotate180();
             BarcodeEncoder barcodeEncoder = new BarcodeEncoder();
             Bitmap bitmap = barcodeEncoder.createBitmap(bitMatrix);
