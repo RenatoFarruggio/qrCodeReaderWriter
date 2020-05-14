@@ -35,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
         scanButton.setOnClickListener(new View.OnClickListener()  {
             @Override
             public void onClick(View view) {
+                onPause();
                 startActivity(new Intent(getApplicationContext(), ScanCodeActivity.class));
             }
         });
