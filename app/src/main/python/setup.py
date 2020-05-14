@@ -14,7 +14,7 @@ setuptools.setup(
     url="https://github.com/cn-uofbasel/BACnet/tree/master/groups/04-logMerge/eventCreationTool",
     packages=setuptools.find_packages(),
     install_requires=[
-          'cbor2',
+          'cbor',
           'pynacl',
       ],
     classifiers=[

@@ -2,7 +2,6 @@ import Event  # Our representation of an feed event, please refer to Event.py
 import hashlib  # Comes with python
 import hmac  # Comes with python
 import secrets  # Comes with python
-import nacl.signing  # install with 'pip install pynacl'
 import nacl.encoding
 
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

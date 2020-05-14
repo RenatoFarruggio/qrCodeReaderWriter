@@ -17,11 +17,11 @@ class Meta:
 
     @classmethod
     def from_cbor(cls, meta):  # Read in a Meta() object from cbor format
-        feed_id, seq_no, hash_of_prev, signature_info, hash_of_content = cbor2.loads(meta)
+        feed_id, seq_no, hash_of_prev, signature_info, hash_of_content = cbor.loads(meta)
         return Meta(feed_id, seq_no, hash_of_prev, signature_info, hash_of_content)
 
     def get_as_cbor(self):  # Get the cbor encoded version of the meta object
-        return cbor2.dumps([self.feed_id, self.seq_no, self.hash_of_prev, self.signature_info, self.hash_of_content])
+        return cbor.dumps([self.feed_id, self.seq_no, self.hash_of_prev, self.signature_info, self.hash_of_content])
 
 
 class Content:
@@ -32,11 +32,11 @@ class Content:
 
     @classmethod
     def from_cbor(cls, content):  # Read in a Content() object from cbor format
-        identifier, parameters = cbor2.loads(content)
+        identifier, parameters = cbor.loads(content)
         return Content(identifier, parameters)
 
     def get_as_cbor(self):  # Get the Content cbor encoded (as bytes() python object)
-        return cbor2.dumps(self.content)
+        return cbor.dumps(self.content)
 
 
 class Event:
@@ -50,10 +50,10 @@ class Event:
     # parameter event: cbor encoded feed event
     @classmethod
     def from_cbor(self, event):  # Read in an Event from cbor format (parameter is bytes()), creates a new Event object
-        meta, signature, content = cbor2.loads(event)
+        meta, signature, content = cbor.loads(event)
         meta = Meta.from_cbor(meta)
         content = Content.from_cbor(content)
         return Event(meta, signature, content)
 
     def get_as_cbor(self):  # return an event cbor encoded as bytes() python object
-        return cbor2.dumps([self.meta.get_as_cbor(), self.signature, self.content.get_as_cbor()])
+        return cbor.dumps([self.meta.get_as_cbor(), self.signature, self.content.get_as_cbor()])

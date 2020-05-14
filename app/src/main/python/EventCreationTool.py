@@ -218,7 +218,8 @@ class EventFactory(EventCreationTool):
         else:
             new_event = self.create_event(self.public_key, self.sequence_number, self.hash_of_previous_meta,
                                           content_identifier, content_parameter)
-        self.hash_of_previous_meta = self._calculate_hash(Event.Event.from_cbor(new_event).meta.get_as_cbor())
+        self.hash_of_previous_meta = self._calculate_hash(
+            Event.Event.from_cbor(new_event).meta.get_as_cbor())
         self.sequence_number += 1
         return new_event
 
