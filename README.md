@@ -1,7 +1,61 @@
 # qrCodeReaderWriter
 
+## Content
+* [Idea](#idea)
+* [API](#api)
+* [Execution](#execution)
+* [Python-Example](#python-example)
+* [Todo](#todo)
+
+## Contributors
+* Renato Farruggio
+* Caroline Steiblin
+
+## Idea
+Synchronize any database from BACnet from an Android device to another Android device over qr codes.
+
+## API
+We offer the following API to group 12 (logSync) for sending and receiving messages over qr:
+```java
+   public byte[] rd_callback() // called when logSync wants to receive
+   public int wr_callback(byte[]) // called when logSync wants to send
+```
+The usage should be similar to send() and recv() from UDP.  
+In return, we will need a method to start logSync:
+```python
+   startLogSync(rdcb, wrcb);
+```
+
+## Execution
+Sequence of control will be as follows:
+* We start logSync server as part of the logic behind UI:
+```java
+   startLogSync(rd_callback, wr_callback);
+```
+Control is then handed over to python application (logSync).
+* logSync calls callback to receive or to send.  
+* logSync retains control until sync is completed.
+
+## Python-Example
+Code on python side should look like this:  
+```python
+   def startLogSync(rdcb, wrcb):
+     t = threading.Thread(Log_Sync_Thread, args=(rdcb,wrcb))
+     t.start()
+   
+   class Log_Sync_Thread:
+     def __init__(self):
+       pass
+       
+     def run(rdcb, wrcb):
+       self.recv = rdcb
+       self.send = wrcb
+       while True:
+         ... # Main loop
+```
+
 ## TODO:
-* Write proper README
+* ~~Write proper README~~
 * ~~Access front camera~~
 * ~~Implement [asking user for permission to use camera](https://github.com/ParkSangGwon/TedPermission)~~
 * ~~Test if QR code gets recognized through front camera (It does!)~~
@@ -18,6 +72,7 @@
 * __Encode and Decode qr code in base64 encoding__
 * If Chaquopy works as exspected, add it to the documentation over on [BACnet](https://github.com/cn-uofbasel/BACnet/tree/master/groups/02-soundLink)
 * Figure out how to use the [eventCreationTool](https://github.com/cn-uofbasel/BACnet/tree/master/groups/04-logMerge/eventCreationTool) on our android app, according to [this](https://chaquo.com/chaquopy/doc/current/java.html)
-* Make a license file (preferably the same, BACnet uses)
+* ~~Make a license file (preferably the same, BACnet uses)~~
 * Get a [license for Chaquopy](https://chaquo.com/chaquopy/license/?app=ch.unibas.qrscanner)
+* Remote add this repo to BACnet and pull.
 * Specify Interface with group 12 (syncLog). In the ideal case, we can import their code like the eventCreationTool above.
