@@ -1,6 +1,7 @@
-# qrCodeReaderWriter
+# ~~soundLink~~ -> qrLink
 
 ## Content
+* [Contributors](#contributors)
 * [Idea](#idea)
 * [API](#api)
 * [Execution](#execution)
@@ -28,11 +29,11 @@ In return, we will need a method to start logSync:
 
 ## Execution
 Sequence of control will be as follows:
-* We start logSync server as part of the logic behind UI:
+* We start logSync server as part of the logic behind the UI:
 ```java
    startLogSync(rd_callback, wr_callback);
 ```
-Control is then handed over to python application (logSync).
+Control is then handed over to the python application (logSync).
 * logSync calls callback to receive or to send.  
 * logSync retains control until sync is completed.
 
@@ -69,8 +70,9 @@ Code on python side should look like this:
 * ~~Find out how many bps we can send (around 500bytes/packet, maybe up to 2k) should be fine !~~
 * ~~Add [Chaquopy](https://chaquo.com/chaquopy/) to our project to run python files~~
 * ~~Fix __fatal__ bug: Chaquopy can't import python library "cbor2" (Fix by downgrading to cbor)~~
-* __Encode and Decode qr code in base64 encoding__
-* If Chaquopy works as exspected, add it to the documentation over on [BACnet](https://github.com/cn-uofbasel/BACnet/tree/master/groups/02-soundLink)
+* __Encode and Decode qr code in base64 encoding__ (Does not work with our current setup afaik)
+* ~~If Chaquopy works as exspected, add it to the documentation over on [BACnet](https://github.com/cn-uofbasel/BACnet/tree/master/groups/02-soundLink)~~
+* Merge readme from [BACnet](https://github.com/cn-uofbasel/BACnet/tree/master/groups/02-soundLink) into this readme.
 * Figure out how to use the [eventCreationTool](https://github.com/cn-uofbasel/BACnet/tree/master/groups/04-logMerge/eventCreationTool) on our android app, according to [this](https://chaquo.com/chaquopy/doc/current/java.html)
 * ~~Make a license file (preferably the same, BACnet uses)~~
 * Get a [license for Chaquopy](https://chaquo.com/chaquopy/license/?app=ch.unibas.qrscanner)
