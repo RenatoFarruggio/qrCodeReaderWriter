@@ -43,8 +43,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
     int qrSize;
 
     Python py;
-    PyObject eventCreationTool;
-    PyObject eventCreationToolFactory;
+    PyObject logSyncMain;
 
     int lastNum = 0;
 
@@ -187,13 +186,13 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
         // Python equivalent to
         //  "import EventCreationTool"
-        eventCreationTool = py.getModule("EventCreationTool");
-        Log.d("ScanCodeActivity", "EventCreationTool is: " + eventCreationTool);
+        logSyncMain = py.getModule("main");
+        Log.d("ScanCodeActivity", "logSyncMain is: " + logSyncMain);
 
         // Python equivalent to
         //  "ecf = EventCreationTool.EventFactory()"
-        eventCreationToolFactory = eventCreationTool.get("EventFactory");
-        Log.d("ScanCodeActivity", "ectFactory is: " + eventCreationToolFactory);
+        //eventCreationToolFactory = eventCreationTool.get("EventFactory");
+        //Log.d("ScanCodeActivity", "ectFactory is: " + eventCreationToolFactory);
 
         // TODO: fixme
         // Python equivalent to
