@@ -8,6 +8,7 @@ import android.media.AudioManager;
 import android.media.ToneGenerator;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.util.Base64;
 import android.util.Log;
 import android.view.Window;
 import android.widget.ImageView;
@@ -47,6 +48,9 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
     int lastNum = 0;
 
+    boolean shouldReceive;
+    byte[] lastReceived;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,10 +70,12 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
         qrSize = getResources().getDisplayMetrics().widthPixels;
 
+        shouldReceive = false;
+
         // Initialize QR code
-        int initialCode = 0;
+        //int initialCode = 0;
         //setTextToPopupImageView(getStringOfByteSize(200, initialCode));
-        setTextToPopupImageView("0");
+        //setTextToPopupImageView("0");
 
         // Initialize Python
         initializePython();
@@ -78,34 +84,33 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
     @Override
     public void handleResult(Result result) {
-        playBeep(500, 500);
+        //playBeep(500, 500);
         //MainActivity.resultTextView.setText(result.getText());
 
 
 
         // Actually handle the result //
-        String outText = handleResultByCounting(result.getText());
+        //String outText = handleResultByCounting(result.getText());
         //String outText = handleResultByCountingInLargePackets(result.getText());
         //String outText = handleResultByCountingInDatabase(result.getText());
         //String outText = handleResultBySyncingLog(result.getText());
+        if (shouldReceive) {
+            shouldReceive = false;
+            lastReceived = Base64.decode(result.getText(), Base64.DEFAULT);
+            //lastReceived = Base64.decode(result.getRawBytes(), Base64.DEFAULT);
+            playBeep(100);
+            // TODO: optimize this (maybe remove it?)
+            // These commands are needed to prevent the camera from freezing
+            onPause();
+            onResume();
+        }
 
 
-
-
-        // TODO: optimize this (maybe remove it?)
-        // These commands are needed to prevent the camera from freezing
-        onPause();
-        onResume();
 
 
         // Write text into QR code
-        setTextToPopupImageView(outText);
-    }
-
-    private String handleResultBySyncingLog(String text) {
-        // TODO: implement this
-
-        return "";
+        //setTextToPopupImageView(outText);
+        //setBase64ToPopupImageView(outData);
     }
 
     private String handleResultByCounting(String text) {
@@ -219,6 +224,22 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         }
     }
 
+    private int setBase64ToPopupImageView(byte[] binaryData) {
+        MultiFormatWriter multiFormatWriter = new MultiFormatWriter();
+        try {
+            String base64Text = Base64.encodeToString(binaryData, Base64.DEFAULT);
+            BitMatrix bitMatrix = multiFormatWriter.encode(base64Text, BarcodeFormat.QR_CODE, qrSize, qrSize);
+            BarcodeEncoder barcodeEncoder = new BarcodeEncoder();
+            Bitmap bitmap = barcodeEncoder.createBitmap(bitMatrix);
+            //MainActivity.qrImageView.setImageBitmap(bitmap);
+            popupImageView.setImageBitmap(bitmap);
+        } catch (WriterException e) {
+            e.printStackTrace();
+            return -1;
+        }
+        return 0;
+    }
+
     private void playBeep(int playLengthInMilliseconds, int pauseLengthInMilliseconds) {
         playBeep(playLengthInMilliseconds);
         SystemClock.sleep(pauseLengthInMilliseconds);
@@ -243,6 +264,24 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
         scannerView.setResultHandler(this);
         scannerView.startCamera(1);
+    }
+
+    public byte[] rd_callback() { // called when logSync wants to receive
+        lastReceived = null;
+        shouldReceive = true;
+        while (true) {
+            if (lastReceived != null) {
+                return lastReceived;
+            }
+        }
+        //return "TestString".getBytes(StandardCharsets.UTF_8);
+    }
+
+    // Returns 0 if successful.
+    // Returns -1 if error occured.
+    public int wr_callback(byte[] binData) {  // called when logSync wants to send
+        int errCode = setBase64ToPopupImageView(binData);
+        return errCode;
     }
 
 
