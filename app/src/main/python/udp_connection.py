@@ -1,5 +1,5 @@
 import socket
-import cbor2
+import cbor
 import main
 import pcap
 import sync
@@ -24,13 +24,13 @@ class Server:
         info_request, address = self.socket.recvfrom(buffSize)  # 4
         if info_request == str.encode('requesting_infos_of_all_pcap_files'):
             list_of_files = main.create_list_of_files('udpDir/')  # 4
-            self.socket.sendto(cbor2.dumps(list_of_files), address)  # 4
+            self.socket.sendto(cbor.dumps(list_of_files), address)  # 4
             print("Request accepted, list of files sent.")
         else:
             print("Request denied.")
             return
         # Server receives the list with the necessary log extensions
-        list_with_necessary_files = cbor2.loads(self.socket.recv(buffSize))  # 9
+        list_with_necessary_files = cbor.loads(self.socket.recv(buffSize))  # 9
 
         if not list_with_necessary_files:
             print("All up-to-date on client's side. Closing the socket.")
@@ -40,9 +40,9 @@ class Server:
         # Server sends the log extensions one by one
         for file_info in list_with_necessary_files:
             packet = pcap.get_meta_and_cont_bits('udpDir/' + file_info[0], file_info[2])  # 10
-            self.__package_to_send_as_bytes.append(cbor2.dumps(packet))
+            self.__package_to_send_as_bytes.append(cbor.dumps(packet))
             #############################################################################################
-            self.socket.sendto(cbor2.dumps(packet), address)  # 11
+            self.socket.sendto(cbor.dumps(packet), address)  # 11
             print("Sending extensions from seq=" + str(file_info[2]) + " on of " + file_info[0] + "...")
             #############################################################################################
 
@@ -68,10 +68,10 @@ class Client:
         self.__received_package_as_events = []
 
         # Contains a list of all files of the server side and their sequence number
-        requested_list = cbor2.loads(self.socket.recv(buffSize))  # 5 & 6
+        requested_list = cbor.loads(self.socket.recv(buffSize))  # 5 & 6
 
         self.__compared_files = sync.compare_files(requested_list)  # 7
-        self.socket.sendto(cbor2.dumps(self.__compared_files), address)  # 8
+        self.socket.sendto(cbor.dumps(self.__compared_files), address)  # 8
 
         #############################################################################################
         # Client receives log extensions one by one and appends them
