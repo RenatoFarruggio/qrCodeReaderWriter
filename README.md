@@ -78,3 +78,5 @@ Code on python side should look like this:
 * Get a [license for Chaquopy](https://chaquo.com/chaquopy/license/?app=ch.unibas.qrscanner)
 * Remote add this repo to BACnet and pull.
 * Specify Interface with group 12 (syncLog). In the ideal case, we can import their code like the eventCreationTool above.
+* Interface testing: Can we import logSync?
+* Interface testing: Do callbacks work from python back to java?
