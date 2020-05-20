@@ -185,9 +185,21 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         Log.d("ScanCodeActivity", "Python is: " + py);
 
         // Python equivalent to
-        //  "import EventCreationTool"
+        //  "import main"
         logSyncMain = py.getModule("main");
         Log.d("ScanCodeActivity", "logSyncMain is: " + logSyncMain);
+        // logSyncMain KEYSET:
+        // [__builtins__, __cached__, __doc__, __file__, __loader__, __name__,
+        // __package__, __spec__, check_dir, create_list_of_files, dump_directories_cont, os, pcap,
+        // sync, sync_directories, sys, udp_connection]
+
+        PyObject udpConnection = logSyncMain.get("udp_connection");
+        Log.d("ScanCodeActivity", "udpConnection is: " + udpConnection);
+        // udpConnection KEYSET:
+        // [Client, Server, __builtins__, __cached__, __doc__, __file__, __loader__, __name__,
+        // __package__, __spec__, buffSize, cbor, main, pcap, socket, sync]
+
+
 
         // Python equivalent to
         //  "ecf = EventCreationTool.EventFactory()"
