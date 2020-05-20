@@ -30,8 +30,6 @@ import com.journeyapps.barcodescanner.BarcodeEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
-// Python imports
-
 
 public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerView.ResultHandler {
 
@@ -44,6 +42,8 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
     Python py;
     PyObject logSyncMain;
+    PyObject server;
+    PyObject client;
 
     int lastNum = 0;
 
@@ -199,24 +199,23 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         // [Client, Server, __builtins__, __cached__, __doc__, __file__, __loader__, __name__,
         // __package__, __spec__, buffSize, cbor, main, pcap, socket, sync]
 
+        server = udpConnection.get("Server");
+        Log.d("ScanCodeActivity", "server: " + server);
+        // server KEYSET:
+        // [__class__, __delattr__, __dict__, __dir__, __doc__, __eq__, __format__, __ge__,
+        // __getattribute__, __gt__, __hash__, __init__, __init_subclass__, __le__, __lt__,
+        // __module__, __ne__, __new__, __reduce__, __reduce_ex__, __repr__, __setattr__,
+        // __sizeof__, __str__, __subclasshook__, __weakref__, get_packet_to_send_as_bytes]
 
+        client = udpConnection.get("Client");
+        Log.d("ScanCodeActivity", "client: " + client);
+        // client KEYSET:
+        // [__class__, __delattr__, __dict__, __dir__, __doc__, __eq__, __format__, __ge__,
+        // __getattribute__, __gt__, __hash__, __init__, __init_subclass__, __le__, __lt__,
+        // __module__, __ne__, __new__, __reduce__, __reduce_ex__, __repr__, __setattr__,
+        // __sizeof__, __str__, __subclasshook__, __weakref__,
+        // get_compared_files, get_packet_to_receive_as_bytes]
 
-        // Python equivalent to
-        //  "ecf = EventCreationTool.EventFactory()"
-        //eventCreationToolFactory = eventCreationTool.get("EventFactory");
-        //Log.d("ScanCodeActivity", "ectFactory is: " + eventCreationToolFactory);
-
-        // TODO: fixme
-        // Python equivalent to
-        //  "new_event = ecf.next_event(content_identifier, content_parameter)"
-
-        //PyObject new_event = eventCreationToolFactory.get("next_event", "yourownapp/firstcommand", "content_parameter_42");
-
-        //byte[] commandInBytes = "yourownapp/firstcommand".getBytes(StandardCharsets.UTF_8);
-        //byte[] paramsInBytes = "content_parameter_42".getBytes(StandardCharsets.UTF_8);
-        //PyObject new_event = eventCreationToolFactory.call("next_event", new Kwarg("content_identifier", commandInBytes) , new Kwarg("content_parameter", paramsInBytes));
-
-        //Log.d("ScanCodeActivity", "new_event is: " + new_event);
     }
 
     private void setTextToPopupImageView(String text) {
