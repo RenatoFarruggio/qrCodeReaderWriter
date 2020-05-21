@@ -61,8 +61,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         scannerView = new ZXingScannerView(this);
         setContentView(scannerView);
 
-        this.device = MainActivity.getDevice();
-        Log.d("ScanCodeActivity", "Started as device " + device);
+        Log.d("ScanCodeActivity", "Started as device " + MainActivity.getDevice());
 
         toneGenerator = new ToneGenerator(AudioManager.STREAM_ALARM, 100);
 
@@ -195,15 +194,29 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
 
         // Python equivalent to
-        //  "import main"
+        //  "import transport"
         transport = py.getModule("transport");
         Log.d("ScanCodeActivity", "transport is: " + transport);
-        //Log.d("ScanCodeActivity", "transport KEYSET: " + transport.keySet());
+        Log.d("ScanCodeActivity", "transport KEYSET: " + transport.keySet());
         // transport KEYSET:
         // [__builtins__, __cached__, __doc__, __file__, __loader__, __name__, __package__,
         // __spec__, cbor, get_event_list, get_i_have_list, get_i_want_list, pcap, sync]
 
 
+        // Synchronize
+        if (MainActivity.getDevice() == 'A') {
+            // FIXME: TypeError: 'module' object is not callable.
+            //  We have to call it, so transport must not be a module.
+            PyObject i_have_list = transport.call("get_i_have_list");
+
+            //Log.d("ScanCodeActivity", "i_have_list: " + i_have_list);
+            Log.d("ScanCodeActivity", "KEYSET of i_have_list: " + i_have_list.keySet());
+
+
+        } else if (MainActivity.getDevice() == 'B') {
+
+
+        }
 
         // Create Directory for Databases
         // Python equivalent to
