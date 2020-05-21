@@ -13,7 +13,7 @@
 * Caroline Steiblin
 
 ## Idea
-Synchronize any database from BACnet from an Android device to another Android device over qr codes.
+Implement an interface that allows two Android phones to send and receive QR codes between each other, using [Zxing](https://github.com/zxing/zxing) library. Synchronize any database from BACnet from an Android device to another Android device over qr codes.
 
 ## API
 We offer the following API to group 12 (logSync) for sending and receiving messages over qr:
@@ -54,6 +54,11 @@ Code on python side should look like this:
        while True:
          ... # Main loop
 ```
+## Compatibility
+Packet format compatible with log requirements [here](https://github.com/cn-uofbasel/BACnet/blob/master/doc/BACnet-event-structure.md)
+
+## Tagebuch
+All meeting notes are located in the Tagebuch, [here](https://github.com/cn-uofbasel/BACnet/blob/master/groups/02-soundLink/Tagebuch.md).
 
 ## TODO:
 * ~~Write proper README~~
