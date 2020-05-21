@@ -12,9 +12,16 @@
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Scan QR Code"
+        android:text="Scan as device A"
         android:textSize="16sp"
-        android:id="@+id/btn_scan"
+        android:id="@+id/btn_scan_A"
+        />
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Scan as device B"
+        android:textSize="16sp"
+        android:id="@+id/btn_scan_B"
         />
     <TextView
         android:layout_width="match_parent"

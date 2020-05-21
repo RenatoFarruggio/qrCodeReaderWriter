@@ -19,22 +19,40 @@ import io.reactivex.functions.Consumer;
 public class MainActivity extends AppCompatActivity {
 
     public static TextView resultTextView;
-    Button scanButton;
+    Button scanButtonA;
+    Button scanButtonB;
     public static ImageView qrImageView;
 
+    private static char device;
 
+
+    public static char getDevice() {
+        return device;
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         resultTextView = (TextView)findViewById(R.id.result_text);
-        scanButton = (Button) findViewById(R.id.btn_scan);
+        //scanButton = (Button) findViewById(R.id.btn_scan);
+        scanButtonA = (Button) findViewById(R.id.btn_scan_A);
+        scanButtonB = (Button) findViewById(R.id.btn_scan_B);
         qrImageView = (ImageView) findViewById(R.id.result_qr_code);
 
-        scanButton.setOnClickListener(new View.OnClickListener()  {
+        scanButtonA.setOnClickListener(new View.OnClickListener()  {
             @Override
             public void onClick(View view) {
+                device = 'A';
+                onPause();
+                startActivity(new Intent(getApplicationContext(), ScanCodeActivity.class));
+            }
+        });
+
+        scanButtonB.setOnClickListener(new View.OnClickListener()  {
+            @Override
+            public void onClick(View view) {
+                device = 'B';
                 onPause();
                 startActivity(new Intent(getApplicationContext(), ScanCodeActivity.class));
             }

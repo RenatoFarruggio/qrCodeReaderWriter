@@ -43,11 +43,10 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
     Dialog qrPopupDialog;
     ImageView popupImageView;
     int qrSize;
+    char device; // 'A' or 'B'
 
     Python py;
-    PyObject logSyncMain;
-    PyObject server;
-    PyObject client;
+    PyObject transport;
     String dirName;
 
     int lastNum = 0;
@@ -61,6 +60,9 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         super.onCreate(savedInstanceState);
         scannerView = new ZXingScannerView(this);
         setContentView(scannerView);
+
+        this.device = MainActivity.getDevice();
+        Log.d("ScanCodeActivity", "Started as device " + device);
 
         toneGenerator = new ToneGenerator(AudioManager.STREAM_ALARM, 100);
 
@@ -191,43 +193,16 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         py = Python.getInstance();
         Log.d("ScanCodeActivity", "Python is: " + py);
 
+
         // Python equivalent to
         //  "import main"
-        logSyncMain = py.getModule("main");
-        Log.d("ScanCodeActivity", "logSyncMain is: " + logSyncMain);
-        // logSyncMain KEYSET:
-        // [__builtins__, __cached__, __doc__, __file__, __loader__, __name__,
-        // __package__, __spec__, check_dir, create_list_of_files, dump_directories_cont, os, pcap,
-        // sync, sync_directories, sys, udp_connection]
+        transport = py.getModule("transport");
+        Log.d("ScanCodeActivity", "transport is: " + transport);
+        //Log.d("ScanCodeActivity", "transport KEYSET: " + transport.keySet());
+        // transport KEYSET:
+        // [__builtins__, __cached__, __doc__, __file__, __loader__, __name__, __package__,
+        // __spec__, cbor, get_event_list, get_i_have_list, get_i_want_list, pcap, sync]
 
-        // Python equivalent to
-        //  "udpConnection = main.udp_connection"
-        PyObject udpConnection = logSyncMain.get("udp_connection");
-        Log.d("ScanCodeActivity", "udpConnection is: " + udpConnection);
-        // udpConnection KEYSET:
-        // [Client, Server, __builtins__, __cached__, __doc__, __file__, __loader__, __name__,
-        // __package__, __spec__, buffSize, cbor, main, pcap, socket, sync]
-
-        // Python equivalent to
-        //  "server = udpConnection.Server"
-        server = udpConnection.get("Server");
-        Log.d("ScanCodeActivity", "server: " + server);
-        // server KEYSET:
-        // [__class__, __delattr__, __dict__, __dir__, __doc__, __eq__, __format__, __ge__,
-        // __getattribute__, __gt__, __hash__, __init__, __init_subclass__, __le__, __lt__,
-        // __module__, __ne__, __new__, __reduce__, __reduce_ex__, __repr__, __setattr__,
-        // __sizeof__, __str__, __subclasshook__, __weakref__, get_packet_to_send_as_bytes]
-
-        // Python equivalent to
-        //  "client = udpConnection.Client"
-        client = udpConnection.get("Client");
-        Log.d("ScanCodeActivity", "client: " + client);
-        // client KEYSET:
-        // [__class__, __delattr__, __dict__, __dir__, __doc__, __eq__, __format__, __ge__,
-        // __getattribute__, __gt__, __hash__, __init__, __init_subclass__, __le__, __lt__,
-        // __module__, __ne__, __new__, __reduce__, __reduce_ex__, __repr__, __setattr__,
-        // __sizeof__, __str__, __subclasshook__, __weakref__,
-        // get_compared_files, get_packet_to_receive_as_bytes]
 
 
         // Create Directory for Databases
@@ -242,7 +217,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
             Log.d("ScanCodeActivity", "inFile: " + inFile);
         }
 
-        logSyncMain.callAttr("check_dir", new Kwarg("dir1", path));
+        //transport.callAttr("check_dir", new Kwarg("dir1", path));
 
     }
 
