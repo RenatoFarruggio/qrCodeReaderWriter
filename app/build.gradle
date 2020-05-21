@@ -6,7 +6,7 @@ android {
     if (System.getProperty("os.name").equals("Windows 10")) {
         ndkVersion "21.1.6352462"
     } else {
-        ndkVersion "CAROLINE"
+        ndkVersion "21.0.6113669"
     }
 
 
@@ -34,7 +34,7 @@ android {
         } else {
             python {
                 //version "3.8.1"
-                buildPython "CAROLINE PATH"
+                buildPython "/usr/bin/python3"
                 pip {
                     install "cbor"
                     install "pynacl"
