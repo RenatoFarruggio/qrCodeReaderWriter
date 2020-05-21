@@ -27,7 +27,10 @@ import me.dm7.barcodescanner.zxing.ZXingScannerView;
 
 import com.journeyapps.barcodescanner.BarcodeEncoder;
 
+import java.io.File;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
 import java.util.Arrays;
 
 
@@ -44,6 +47,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
     PyObject logSyncMain;
     PyObject server;
     PyObject client;
+    String dirName;
 
     int lastNum = 0;
 
@@ -70,6 +74,8 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         qrSize = getResources().getDisplayMetrics().widthPixels;
 
         shouldReceive = false;
+
+        dirName = "databases";
 
         // Initialize QR code
         //int initialCode = 0;
@@ -193,12 +199,16 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         // __package__, __spec__, check_dir, create_list_of_files, dump_directories_cont, os, pcap,
         // sync, sync_directories, sys, udp_connection]
 
+        // Python equivalent to
+        //  "udpConnection = main.udp_connection"
         PyObject udpConnection = logSyncMain.get("udp_connection");
         Log.d("ScanCodeActivity", "udpConnection is: " + udpConnection);
         // udpConnection KEYSET:
         // [Client, Server, __builtins__, __cached__, __doc__, __file__, __loader__, __name__,
         // __package__, __spec__, buffSize, cbor, main, pcap, socket, sync]
 
+        // Python equivalent to
+        //  "server = udpConnection.Server"
         server = udpConnection.get("Server");
         Log.d("ScanCodeActivity", "server: " + server);
         // server KEYSET:
@@ -207,6 +217,8 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         // __module__, __ne__, __new__, __reduce__, __reduce_ex__, __repr__, __setattr__,
         // __sizeof__, __str__, __subclasshook__, __weakref__, get_packet_to_send_as_bytes]
 
+        // Python equivalent to
+        //  "client = udpConnection.Client"
         client = udpConnection.get("Client");
         Log.d("ScanCodeActivity", "client: " + client);
         // client KEYSET:
@@ -215,6 +227,21 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         // __module__, __ne__, __new__, __reduce__, __reduce_ex__, __repr__, __setattr__,
         // __sizeof__, __str__, __subclasshook__, __weakref__,
         // get_compared_files, get_packet_to_receive_as_bytes]
+
+
+        // Create Directory for Databases
+        // Python equivalent to
+        //  "main.check_dir(dir1)"
+        String path = getApplicationContext().getFilesDir().getPath() + "/" + dirName;
+        File f = new File(path);
+        if (!f.exists())
+            f.mkdir();
+        File[] files = f.listFiles();
+        for (File inFile : files) {
+            Log.d("ScanCodeActivity", "inFile: " + inFile);
+        }
+
+        logSyncMain.callAttr("check_dir", new Kwarg("dir1", path));
 
     }
 
