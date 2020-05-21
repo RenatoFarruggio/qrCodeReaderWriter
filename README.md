@@ -6,6 +6,8 @@
 * [API](#api)
 * [Execution](#execution)
 * [Python-Example](#python-example)
+* [Compatibility](#compatibility)
+* [Diary](#diary)
 * [Todo](#todo)
 
 ## Contributors
@@ -57,8 +59,8 @@ Code on python side should look like this:
 ## Compatibility
 Packet format compatible with log requirements [here](https://github.com/cn-uofbasel/BACnet/blob/master/doc/BACnet-event-structure.md)
 
-## Tagebuch
-All meeting notes are located in the Tagebuch, [here](https://github.com/cn-uofbasel/BACnet/blob/master/groups/02-soundLink/Tagebuch.md).
+## Diary
+All meeting notes are located in the diary, [here](https://github.com/cn-uofbasel/BACnet/blob/master/groups/02-soundLink/Tagebuch.md).
 
 ## TODO:
 * ~~Write proper README~~
@@ -77,12 +79,13 @@ All meeting notes are located in the Tagebuch, [here](https://github.com/cn-uofb
 * ~~Fix __fatal__ bug: Chaquopy can't import python library "cbor2" (Fix by downgrading to cbor)~~
 * __Encode and Decode qr code in base64 encoding__ (Does not work with our current setup afaik)
 * ~~If Chaquopy works as exspected, add it to the documentation over on [BACnet](https://github.com/cn-uofbasel/BACnet/tree/master/groups/02-soundLink)~~
-* Merge readme from [BACnet](https://github.com/cn-uofbasel/BACnet/tree/master/groups/02-soundLink) into this readme.
-* Figure out how to use the [eventCreationTool](https://github.com/cn-uofbasel/BACnet/tree/master/groups/04-logMerge/eventCreationTool) on our android app, according to [this](https://chaquo.com/chaquopy/doc/current/java.html)
+* ~~Merge readme from [BACnet](https://github.com/cn-uofbasel/BACnet/tree/master/groups/02-soundLink) into this readme.~~
+* ~~Figure out how to use the [eventCreationTool](https://github.com/cn-uofbasel/BACnet/tree/master/groups/04-logMerge/eventCreationTool) on our android app, according to [this](https://chaquo.com/chaquopy/doc/current/java.html)~~
 * ~~Make a license file (preferably the same, BACnet uses)~~
-* Get a [license for Chaquopy](https://chaquo.com/chaquopy/license/?app=ch.unibas.qrscanner)
+* ~~Get a [license for Chaquopy](https://chaquo.com/chaquopy/license/?app=ch.unibas.qrscanner)~~
 * Remote add this repo to BACnet and pull.
-* Specify Interface with group 12 (syncLog). In the ideal case, we can import their code like the eventCreationTool above.
-* __Import logSync__
-* Interface testing: Can we import logSync?
+* ~~Specify Interface with group 12 (syncLog). In the ideal case, we can import their code like the eventCreationTool above.~~
+* ~~__Import logSync__~~
+* ~~Interface testing: Can we import logSync?~~
 * Interface testing: Do callbacks work from python back to java?
+* Get logSync to run successfully
