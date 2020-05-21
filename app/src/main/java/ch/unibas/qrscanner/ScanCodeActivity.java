@@ -36,7 +36,8 @@ import java.util.Arrays;
 
 public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerView.ResultHandler {
 
-
+    // TODO: make a daemon thread for camera activity and close it in onBackPressed().
+    //  (In case camera pauses when running python code.)
     ZXingScannerView scannerView;
     ToneGenerator toneGenerator;
     Dialog qrPopupDialog;
