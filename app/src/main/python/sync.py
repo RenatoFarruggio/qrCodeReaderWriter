@@ -89,6 +89,7 @@ def compare_files(list_of_files):
 
     list_for_client = []
     for i, elem in enumerate(list_of_files):
+        # TODO: Change directory to database
         file = 'udpDir/' + elem[0]
         if os.path.isfile(file):
             seq_num = pcap.get_seq(file)
@@ -102,13 +103,25 @@ def compare_files(list_of_files):
     return list_for_client
 
 
+def create_list_of_files(dir1):
+    dir_list = os.listdir(dir1)
+
+    l = []
+    for n, elem in enumerate(dir_list):
+        file = dir1 + elem
+        fid1, seq = pcap.get_fid_and_seq(file)
+        l.append([elem, fid1, seq])
+    return l
+
+
 def sync_extensions(compared_files, extensions_files):
+    extensions_files = cbor.loads(extensions_files)
     if len(compared_files) != len(extensions_files):
         print("Something went wrong..")
         return
 
     for i, val in enumerate(compared_files):
-        event = cbor.loads(extensions_files[i])
+        event = extensions_files[i]
         synchro = Sync('udpDir/' + val[0])
 
         # If the file has to be created, the key is needed
