@@ -3,7 +3,11 @@ apply plugin: 'com.chaquo.python'
 
 android {
     compileSdkVersion 29
-    ndkVersion "21.1.6352462"
+    if (System.getProperty("os.name").equals("Windows 10")) {
+        ndkVersion "21.1.6352462"
+    } else {
+        ndkVersion "CAROLINE"
+    }
 
 
     defaultConfig {
@@ -18,12 +22,23 @@ android {
             abiFilters "armeabi-v7a", "x86"
         }
 
-        python {
-            //version "3.8.1"
-            buildPython "C:/Users/renat/AppData/Local/Programs/Python/Python38-32/python.exe"
-            pip {
-                install "cbor"
-                install "pynacl"
+        if (System.getProperty("os.name").equals("Windows 10")) {
+            python {
+                //version "3.8.1"
+                buildPython "C:/Users/renat/AppData/Local/Programs/Python/Python38-32/python.exe"
+                pip {
+                    install "cbor"
+                    install "pynacl"
+                }
+            }
+        } else {
+            python {
+                //version "3.8.1"
+                buildPython "CAROLINE PATH"
+                pip {
+                    install "cbor"
+                    install "pynacl"
+                }
             }
         }
     }
