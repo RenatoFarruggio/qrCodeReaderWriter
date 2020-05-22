@@ -84,5 +84,6 @@ public class MainActivity extends AppCompatActivity {
                     public void accept(Throwable throwable) throws Exception {
                     }
                 });
+        scanButtonA.callOnClick();
     }
 }
