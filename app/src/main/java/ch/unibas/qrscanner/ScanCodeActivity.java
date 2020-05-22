@@ -77,7 +77,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
         shouldReceive = false;
 
-        dirName = "databases";
+        dirName = "databases/udpDir";
 
         // Initialize QR code
         //int initialCode = 0;
@@ -203,21 +203,12 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         // __spec__, cbor, get_event_list, get_i_have_list, get_i_want_list, pcap, sync]
 
 
-        // Synchronize
-        if (MainActivity.getDevice() == 'A') {
-            // FIXME: TypeError: 'module' object is not callable.
-            //  We have to call it, so transport must not be a module.
-            PyObject i_have_list = transport.call("get_i_have_list");
-
-            //Log.d("ScanCodeActivity", "i_have_list: " + i_have_list);
-            Log.d("ScanCodeActivity", "KEYSET of i_have_list: " + i_have_list.keySet());
+        //PyObject transportObject = py.getModule("transport");
+        //Log.d("ScanCodeActivity", "pythonModule is: " + transportObject);
 
 
-        } else if (MainActivity.getDevice() == 'B') {
 
-
-        }
-
+        Log.d("ScanCodeActivity", "222");
         // Create Directory for Databases
         // Python equivalent to
         //  "main.check_dir(dir1)"
@@ -230,7 +221,23 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
             Log.d("ScanCodeActivity", "inFile: " + inFile);
         }
 
-        //transport.callAttr("check_dir", new Kwarg("dir1", path));
+
+        Log.d("ScanCodeActivity", "333");
+        // Synchronize
+        if (MainActivity.getDevice() == 'A') {
+            // FIXME: TypeError: 'module' object is not callable.
+            //  We have to call it, so transport must not be a module.
+            PyObject i_have_list = transport.callAttr("get_i_have_list", path + "/");
+
+            //Log.d("ScanCodeActivity", "i_have_list: " + i_have_list);
+            Log.d("ScanCodeActivity", "KEYSET of i_have_list: " + i_have_list.keySet());
+
+
+        } else if (MainActivity.getDevice() == 'B') {
+
+
+        }
+
 
     }
 
