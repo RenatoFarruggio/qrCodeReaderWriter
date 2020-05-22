@@ -249,9 +249,21 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         Log.d("ScanCodeActivity", "333");
         // Synchronize
         if (MainActivity.getDevice() == 'A') {
-            PyObject i_have_list = transport.callAttr("get_i_have_list", path);
+            // FIXME: array0 should be equal to array2.
+            //PyObject i_have_list = transport.callAttr("get_i_have_list", path);
+            PyObject array0 = transport.callAttr("get_i_have_list", path);
+            Log.d("ScanCodeActivity", "array0: " + array0);
 
-            // FIXME: i_have_list, a PyObject, should be the same as itself transformed into a byte[], transformed back into a PyObject.
+            //byte[] array1 = i_have_list.toJava(byte[].class);
+            byte[] array1 = array0.toJava(byte[].class);
+            Log.d("ScanCodeActivity", "array1: " + array1);
+
+
+            PyObject array2 = PyObject.fromJava(array1);
+            Log.d("ScanCodeActivity", "array2: " + array2);
+
+            /*
+            // FIXMEE: i_have_list, a PyObject, should be the same as itself transformed into a byte[], transformed back into a PyObject.
 
             Log.d("ScanCodeActivity", "i_have_list: " + i_have_list);
             Log.d("ScanCodeActivity", "Size of i_have_list: " + sys.callAttr("getsizeof", "i_have_list"));
@@ -268,6 +280,8 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
             // THEN i_have_list SHOULD BE EQUIVALENT TO array2.
             // If not, we will pass wrong bytes.
+
+             */
 
 
         } else if (MainActivity.getDevice() == 'B') {
