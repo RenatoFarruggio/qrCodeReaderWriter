@@ -61,7 +61,7 @@ necessary extensions and creates a list of it.
 """
 
 
-def get_event_list(i_want_list):
+def get_event_list(i_want_list, path='udpDir/'):
     list_with_necessary_extensions = cbor.loads(i_want_list)
     if not list_with_necessary_extensions:
         print("The other device is up-to-date0")
@@ -73,7 +73,7 @@ def get_event_list(i_want_list):
         seq = file_info[2]
 
         # TODO: Change directory to database
-        extension = pcap.get_meta_and_cont_bits('udpDir/' + filename, seq)  # 10
+        extension = pcap.get_meta_and_cont_bits(path + filename, seq)  # 10
         event_list.append(extension)
 
     return cbor.dumps(event_list)
