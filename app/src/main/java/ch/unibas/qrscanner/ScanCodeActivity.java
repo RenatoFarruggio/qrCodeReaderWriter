@@ -257,11 +257,11 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
             Log.d("ScanCodeActivity", "Size of i_have_list: " + sys.callAttr("getsizeof", "i_have_list"));
 
             // PyObject: i_have_list -> byte[]: array1
-            byte[] array1 = i_have_list.toJava(byte[].class);
-            Log.d("ScanCodeActivity", "i_have_list as java byte[]: " + array1.length);
+            byte[] array1 = PyObject2ByteArray(i_have_list);
+            Log.d("ScanCodeActivity", "length of i_have_list as java byte[]: " + array1.length);
 
             // byte[]: array1 -> PyObject: array2
-            PyObject array2 = PyObject.fromJava(array1);
+            PyObject array2 = byteArray2PyObject(array1);
             Log.d("ScanCodeActivity", "array2: " + array2);
             Log.d("ScanCodeActivity", "size of array2: " + sys.callAttr("getsizeof", "array2"));
             //setBase64ToPopupImageView(array);
@@ -276,6 +276,22 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         }
 
 
+    }
+
+    private static byte[] PyObject2ByteArray(PyObject o) {
+        return o.toJava(byte[].class);
+    }
+
+    private static PyObject byteArray2PyObject(byte[] array) {
+        Log.d("ScanCodeActivity", "array size: " + array.length);
+        for (int i = 0; i < array.length; i++) {
+            array[i] = (byte)((int)(array[i]+256) % 256);
+        }
+        //for (byte b : array) {
+        //    Log.d("ScanCodeActivity", "array1: " + b);
+        //}
+        PyObject out = PyObject.fromJava(array);
+        return out;
     }
 
     private void setTextToPopupImageView(String text) {
