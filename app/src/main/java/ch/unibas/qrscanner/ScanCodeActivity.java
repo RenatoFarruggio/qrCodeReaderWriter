@@ -48,6 +48,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
     Python py;
     PyObject transport;
     String dirName;
+    String dirFolderName;
 
     int lastNum = 0;
 
@@ -77,7 +78,8 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
         shouldReceive = false;
 
-        dirName = "databases/udpDir";
+        dirName = "databases";
+        dirFolderName = "udpDir";
 
         // Initialize QR code
         //int initialCode = 0;
@@ -233,13 +235,22 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
 
         Log.d("ScanCodeActivity", "222");
-        // Create Directory for Databases
-        // Python equivalent to
-        //  "main.check_dir(dir1)"
-        String path = getApplicationContext().getFilesDir().getPath() + "/" + dirName + "/";
+        // Create directory for Databases
+        String path = getApplicationContext().getFilesDir().getPath() + "/" + dirName;
         File f = new File(path);
+        //Log.d("ScanCodeActivity", "Path1: " + path);
         if (!f.exists())
+            //Log.d("ScanCodeActivity", "Created Path1: " + path);
             f.mkdir();
+
+        // Create directory for udpDir
+        path = getApplicationContext().getFilesDir().getPath() + "/" + dirName + "/" + dirFolderName;
+        f = new File(path);
+        //Log.d("ScanCodeActivity", "Path2: " + path);
+        if (!f.exists())
+            //Log.d("ScanCodeActivity", "Created Path2: " + path);
+            f.mkdir();
+
         File[] files = f.listFiles();
         for (File inFile : files) {
             Log.d("ScanCodeActivity", "inFile: " + inFile);
