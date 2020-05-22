@@ -263,17 +263,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
             //byte[] array1 = i_have_list.toJava(byte[].class);
             byte[] array1 = array0.toJava(byte[].class);
-            StringBuilder sb = new StringBuilder("[ ");
-
-            for (byte b : array1) {
-                sb.append(b);
-                sb.append(", ");
-            }
-            // delete last ","
-            sb.delete(sb.length() - 2, sb.length() - 1);
-            sb.append(']');
-            String array1String = sb.toString();
-            Log.d("ScanCodeActivity", "array1: " + array1String);
+            Log.d("ScanCodeActivity", "array1: " + Arrays.toString(array1));
 
 
 
