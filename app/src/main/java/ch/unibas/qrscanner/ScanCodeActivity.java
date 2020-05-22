@@ -48,7 +48,6 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
     Python py;
     PyObject transport;
     String dirName;
-    String dirFolderName;
 
     int lastNum = 0;
 
@@ -78,8 +77,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
         shouldReceive = false;
 
-        dirName = "databases";
-        dirFolderName = "udpDir";
+        dirName = "/databases/udpDir/";h:
 
         // Initialize QR code
         //int initialCode = 0;
@@ -235,21 +233,19 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
 
         Log.d("ScanCodeActivity", "222");
-        // Create directory for Databases
-        String path = getApplicationContext().getFilesDir().getPath() + "/" + dirName;
-        File f = new File(path);
-        //Log.d("ScanCodeActivity", "Path1: " + path);
-        if (!f.exists())
-            //Log.d("ScanCodeActivity", "Created Path1: " + path);
-            f.mkdir();
 
-        // Create directory for udpDir
-        path = getApplicationContext().getFilesDir().getPath() + "/" + dirName + "/" + dirFolderName;
-        f = new File(path);
-        //Log.d("ScanCodeActivity", "Path2: " + path);
+        // Create '/databases' directory in ch.unibas.qrscanner.files
+        String path = getApplicationContext().getFilesDir().getPath();
+        if (!path.substring(path.lastIndexOf("/")+1).equals("files")) {
+            path += "/files";
+        }
+        path += dirName;
+
+        File f = new File(path);
+        Log.d("ScanCodeActivity", "Path: " + path);
         if (!f.exists())
-            //Log.d("ScanCodeActivity", "Created Path2: " + path);
-            f.mkdir();
+            Log.d("ScanCodeActivity", "Created Path: " + path);
+            f.mkdirs();
 
         File[] files = f.listFiles();
         for (File inFile : files) {
