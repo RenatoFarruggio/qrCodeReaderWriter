@@ -206,13 +206,37 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         //PyObject transportObject = py.getModule("transport");
         //Log.d("ScanCodeActivity", "pythonModule is: " + transportObject);
 
+        // Python equivalent to
+        //  "import sys"
+        PyObject sys = py.getModule("sys");
+        Log.d("ScanCodeActivity", "sys is: " + sys);
+        Log.d("ScanCodeActivity", "SYS KEYSET: " + sys.keySet());
+        // sys KEYSET:
+        // [__breakpointhook__, __displayhook__, __doc__, __excepthook__, __interactivehook__,
+        // __loader__, __name__, __package__, __spec__, __stderr__, __stdin__, __stdout__,
+        // __unraisablehook__, __warningregistry__, _base_executable, _clear_type_cache,
+        // _current_frames, _debugmallocstats, _framework, _getframe, _git, _home, _xoptions,
+        // abiflags, addaudithook, api_version, argv, audit, base_exec_prefix, base_prefix,
+        // breakpointhook, builtin_module_names, byteorder, call_tracing, callstats, copyright,
+        // displayhook, dont_write_bytecode, exc_info, excepthook, exec_prefix, executable, exit,
+        // flags, float_info, float_repr_style, get_asyncgen_hooks,
+        // get_coroutine_origin_tracking_depth, getallocatedblocks, getandroidapilevel,
+        // getcheckinterval, getdefaultencoding, getdlopenflags, getfilesystemencodeerrors,
+        // getfilesystemencoding, getprofile, getrecursionlimit, getrefcount, getsizeof,
+        // getswitchinterval, gettrace, hash_info, hexversion, implementation, int_info, intern,
+        // is_finalizing, maxsize, maxunicode, meta_path, modules, path, path_hooks,
+        // path_importer_cache, platform, prefix, pycache_prefix, set_asyncgen_hooks,
+        // set_coroutine_origin_tracking_depth, setcheckinterval, setdlopenflags, setprofile,
+        // setrecursionlimit, setswitchinterval, settrace, stderr, stdin, stdout, thread_info,
+        // unraisablehook, version, version_info, warnoptions]
+
 
 
         Log.d("ScanCodeActivity", "222");
         // Create Directory for Databases
         // Python equivalent to
         //  "main.check_dir(dir1)"
-        String path = getApplicationContext().getFilesDir().getPath() + "/" + dirName;
+        String path = getApplicationContext().getFilesDir().getPath() + "/" + dirName + "/";
         File f = new File(path);
         if (!f.exists())
             f.mkdir();
@@ -225,12 +249,25 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         Log.d("ScanCodeActivity", "333");
         // Synchronize
         if (MainActivity.getDevice() == 'A') {
-            // FIXME: TypeError: 'module' object is not callable.
-            //  We have to call it, so transport must not be a module.
-            PyObject i_have_list = transport.callAttr("get_i_have_list", path + "/");
+            PyObject i_have_list = transport.callAttr("get_i_have_list", path);
 
-            //Log.d("ScanCodeActivity", "i_have_list: " + i_have_list);
-            Log.d("ScanCodeActivity", "KEYSET of i_have_list: " + i_have_list.keySet());
+            // FIXME: i_have_list, a PyObject, should be the same as itself transformed into a byte[], transformed back into a PyObject.
+
+            Log.d("ScanCodeActivity", "i_have_list: " + i_have_list);
+            Log.d("ScanCodeActivity", "Size of i_have_list: " + sys.callAttr("getsizeof", "i_have_list"));
+
+            // PyObject: i_have_list -> byte[]: array1
+            byte[] array1 = i_have_list.toJava(byte[].class);
+            Log.d("ScanCodeActivity", "i_have_list as java byte[]: " + array1.length);
+
+            // byte[]: array1 -> PyObject: array2
+            PyObject array2 = PyObject.fromJava(array1);
+            Log.d("ScanCodeActivity", "array2: " + array2);
+            Log.d("ScanCodeActivity", "size of array2: " + sys.callAttr("getsizeof", "array2"));
+            //setBase64ToPopupImageView(array);
+
+            // THEN i_have_list SHOULD BE EQUIVALENT TO array2.
+            // If not, we will pass wrong bytes.
 
 
         } else if (MainActivity.getDevice() == 'B') {
