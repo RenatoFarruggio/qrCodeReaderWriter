@@ -32,6 +32,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.concurrent.Semaphore;
 
 
 public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerView.ResultHandler {
@@ -53,8 +54,17 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
     int lastNum = 0;
 
-    boolean shouldReceive;
-    byte[] lastReceived;
+    volatile private boolean shouldUpdateQR;
+    volatile private byte[] setToQR;
+
+    final Object shouldUpdateQRMonitor = new Object();
+
+    volatile private boolean shouldReceive;
+    volatile private byte[] lastReceived;
+
+    static Semaphore semaphore = new Semaphore(1);
+
+    final Object shouldReceiveMonitor = new Object();
 
     String path;
 
@@ -62,7 +72,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        cameraID = 1;
+        cameraID = 0;
         scannerView = new ZXingScannerView(this);
         setContentView(scannerView);
 
@@ -80,7 +90,13 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
         qrSize = getResources().getDisplayMetrics().widthPixels;
 
-        shouldReceive = false;
+        synchronized (shouldReceiveMonitor) {
+            shouldReceive = false;
+        }
+
+        synchronized (shouldUpdateQRMonitor) {
+            shouldUpdateQR = false;
+        }
 
         dirName = "/databases/udpDir/";
 
@@ -98,7 +114,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
         // Start synchronizer thread
         SynchronizerThread synchronizer = new SynchronizerThread();
-        synchronizer.run();
+        synchronizer.start();
     }
 
     /**
@@ -107,7 +123,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
     class SynchronizerThread extends Thread {
 
 
-        public void run() {
+        public void run1() {
            while (true) {
                try {
                    Log.d("ScanCodeActivity", "THIS IS A MESSAGE");
@@ -118,7 +134,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
            }
         }
 
-        public void run1() {
+        public void run() {
             // Synchronize
             if (MainActivity.getDevice() == 'A') {
                 // Get i_have_list
@@ -133,15 +149,88 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
                 Log.d("ScanCodeActivity", "length of str array: " + Arrays.toString(i_have_list).length());
 
                 // Show QR code
-                setBase64ToPopupImageView(i_have_list);
+                synchronized (shouldUpdateQRMonitor) {
+                    setToQR = i_have_list;
+                    shouldUpdateQR = true;
+                }
+
+                Log.d("ScanCodeActivity", "Show QR code.");
 
                 // Start accepting qr codes
-                //shouldReceive = true;
+                try {
+                    semaphore.acquire();
+                    Log.d("ScanCodeActivity", "Semaphore acquired in run of Device A.");
+                    shouldReceive = true;
+                    Log.d("ScanCodeActivity", "Semaphore released in run of Device A.");
+                    semaphore.release();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
 
                 // WAIT for receiving //
-                //while (true) {
 
-                //}
+                Log.d("ScanCodeActivity", "Wait for receiving...");
+
+
+                /*try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }*/
+
+                Log.d("ScanCodeActivity", "1111");
+
+                synchronized (shouldReceiveMonitor) {
+                    try {
+                        Log.d("ScanCodeActivity", "Before");
+                        shouldReceiveMonitor.wait();
+                        Log.d("ScanCodeActivity", "After");
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                Log.d("ScanCodeActivity", "I've waited.");
+                while (true) {
+                    try {
+                        semaphore.acquire();
+                        Log.d("ScanCodeActivity", "Semaphore acquired.");
+                        try {
+                            // do stuff
+                            if (lastReceived != null) {
+                                Log.d("ScanCodeActivity", "I don't know what to do with it, but this is lastReceived: " + Arrays.toString(lastReceived));
+                                lastReceived = null;
+                                break;
+                            }
+                        } finally {
+                            Log.d("ScanCodeActivity", "Semaphore released.");
+                            semaphore.release();
+                            synchronized (Thread.currentThread()) {
+                                Thread.currentThread().wait(1000);
+                            }
+                        }
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                /*while (!shouldReceive) {
+                    synchronized (shouldReceiveMonitor) {
+                        try {
+                            shouldReceiveMonitor.wait();
+                            Log.d("ScanCodeActivity", "Thread B was notified!");
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+                 */
+                Log.d("ScanCodeActivity", "World!");
+
+
+
+
+
 
 
 
@@ -157,7 +246,9 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
             } else if (MainActivity.getDevice() == 'B') {
 
-                shouldReceive = true;
+                synchronized (shouldReceiveMonitor) {
+                    shouldReceive = true;
+                }
 
                 // Receive i_want_list
                 while (true) {
@@ -247,12 +338,42 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         //String outText = handleResultByCountingInLargePackets(result.getText());
         //String outText = handleResultByCountingInDatabase(result.getText());
         //String outText = handleResultBySyncingLog(result.getText());
-        if (shouldReceive) {
-            shouldReceive = false;
-            lastReceived = Base64.decode(result.getText(), Base64.DEFAULT);
-            //lastReceived = Base64.decode(result.getRawBytes(), Base64.DEFAULT);
-            playBeep(100);
+
+
+        try {
+            semaphore.acquire();
+            try {
+                Log.d("ScanCodeActivity", "shouldReceive: " + shouldReceive);
+                if (shouldReceive) {
+                    shouldReceive = false;
+                    lastReceived = Base64.decode(result.getText(), Base64.DEFAULT);
+                    playBeep(100);
+                }
+                synchronized (shouldUpdateQRMonitor) {
+                    if (shouldUpdateQR) {
+                        shouldUpdateQR = false;
+                        setBase64ToPopupImageView(setToQR);
+                        setToQR = null;
+                    }
+                }
+            } finally {
+                synchronized (shouldReceiveMonitor) {
+                    shouldReceiveMonitor.notifyAll();
+                    semaphore.release();
+                }
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
+        /*synchronized (shouldReceiveMonitor) {
+            if (shouldReceive) {
+                shouldReceive = false;
+                lastReceived = Base64.decode(result.getText(), Base64.DEFAULT);
+                //lastReceived = Base64.decode(result.getRawBytes(), Base64.DEFAULT);
+                playBeep(100);
+                shouldReceiveMonitor.notify();
+            }
+        }*/
 
 
 
