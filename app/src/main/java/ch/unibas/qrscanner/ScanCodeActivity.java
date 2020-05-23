@@ -77,7 +77,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
         shouldReceive = false;
 
-        dirName = "/databases/udpDir/";h:
+        dirName = "/databases/udpDir/";
 
         // Initialize QR code
         //int initialCode = 0;
