@@ -64,7 +64,7 @@ necessary extensions and creates a list of it.
 def get_event_list(i_want_list, path='udpDir/'):
     list_with_necessary_extensions = cbor.loads(i_want_list)
     if not list_with_necessary_extensions:
-        print("The other device is up-to-date0")
+        print("The other device is up-to-date.")
         return []
 
     event_list = []
