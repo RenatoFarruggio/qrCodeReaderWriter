@@ -260,17 +260,13 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
             PyObject i_have_list = transport.callAttr("get_i_have_list", path);
             Log.d("ScanCodeActivity", "i_have_list: " + i_have_list);
 
-            // Create Java bytearray from i_have_list. We can send this.
-            byte[] i_have_list1 = i_have_list.toJava(byte[].class);
+            // Convert PyObject to byte[]
+            byte[] i_have_list1 = PyObject2ByteArray(i_have_list);
             Log.d("ScanCodeActivity", "i_have_list1: " + Arrays.toString(i_have_list1));
 
-            // Prepare bytearray to be converted back.
-            PyObject i_have_list2 = PyObject.fromJava(i_have_list1);
+            // Convert byte[] to PyObject
+            PyObject i_have_list2 = byteArray2PyObject(i_have_list1);
             Log.d("ScanCodeActivity", "i_have_list2: " + i_have_list2);
-
-            // Convert java bytearray to equivalent PyObject.
-            PyObject i_have_list3 = transport.callAttr("get_bytes_from_tojava_pyobject", i_have_list2);
-            Log.d("ScanCodeActivity", "i_have_list3:" + i_have_list3);
 
 
         } else if (MainActivity.getDevice() == 'B') {
@@ -285,16 +281,8 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         return o.toJava(byte[].class);
     }
 
-    private static PyObject byteArray2PyObject(byte[] array) {
-        Log.d("ScanCodeActivity", "array size: " + array.length);
-        for (int i = 0; i < array.length; i++) {
-            array[i] = (byte)((int)(array[i]+256) % 256);
-        }
-        //for (byte b : array) {
-        //    Log.d("ScanCodeActivity", "array1: " + b);
-        //}
-        PyObject out = PyObject.fromJava(array);
-        return out;
+    private PyObject byteArray2PyObject(byte[] array) {
+        return transport.callAttr("get_bytes_from_tojava_pyobject", PyObject.fromJava(array));
     }
 
     private void setTextToPopupImageView(String text) {
