@@ -256,40 +256,21 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         Log.d("ScanCodeActivity", "333");
         // Synchronize
         if (MainActivity.getDevice() == 'A') {
-            // FIXME: array0 should be equal to array2.
-            //PyObject i_have_list = transport.callAttr("get_i_have_list", path);
-            PyObject array0 = transport.callAttr("get_i_have_list", path);
-            Log.d("ScanCodeActivity", "array0: " + array0);
-
-            //byte[] array1 = i_have_list.toJava(byte[].class);
-            byte[] array1 = array0.toJava(byte[].class);
-            Log.d("ScanCodeActivity", "array1: " + Arrays.toString(array1));
-
-
-
-            PyObject array2 = PyObject.fromJava(array1);
-            Log.d("ScanCodeActivity", "array2: " + array2);
-
-            /*
-            // FIXMEE: i_have_list, a PyObject, should be the same as itself transformed into a byte[], transformed back into a PyObject.
-
+            // Get i_have_list
+            PyObject i_have_list = transport.callAttr("get_i_have_list", path);
             Log.d("ScanCodeActivity", "i_have_list: " + i_have_list);
-            Log.d("ScanCodeActivity", "Size of i_have_list: " + sys.callAttr("getsizeof", "i_have_list"));
 
-            // PyObject: i_have_list -> byte[]: array1
-            byte[] array1 = PyObject2ByteArray(i_have_list);
-            Log.d("ScanCodeActivity", "length of i_have_list as java byte[]: " + array1.length);
+            // Create Java bytearray from i_have_list. We can send this.
+            byte[] i_have_list1 = i_have_list.toJava(byte[].class);
+            Log.d("ScanCodeActivity", "i_have_list1: " + Arrays.toString(i_have_list1));
 
-            // byte[]: array1 -> PyObject: array2
-            PyObject array2 = byteArray2PyObject(array1);
-            Log.d("ScanCodeActivity", "array2: " + array2);
-            Log.d("ScanCodeActivity", "size of array2: " + sys.callAttr("getsizeof", "array2"));
-            //setBase64ToPopupImageView(array);
+            // Prepare bytearray to be converted back.
+            PyObject i_have_list2 = PyObject.fromJava(i_have_list1);
+            Log.d("ScanCodeActivity", "i_have_list2: " + i_have_list2);
 
-            // THEN i_have_list SHOULD BE EQUIVALENT TO array2.
-            // If not, we will pass wrong bytes.
-
-             */
+            // Convert java bytearray to equivalent PyObject.
+            PyObject i_have_list3 = transport.callAttr("get_bytes_from_tojava_pyobject", i_have_list2);
+            Log.d("ScanCodeActivity", "i_have_list3:" + i_have_list3);
 
 
         } else if (MainActivity.getDevice() == 'B') {

@@ -77,3 +77,7 @@ def get_event_list(i_want_list, path='udpDir/'):
         event_list.append(extension)
 
     return cbor.dumps(event_list)
+
+
+def get_bytes_from_tojava_pyobject(b):
+    return bytes(b)
