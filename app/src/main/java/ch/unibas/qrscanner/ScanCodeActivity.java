@@ -251,7 +251,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
                 synchronized (shouldUpdateQRMonitor) {
                     shouldUpdateQR = true;
-                    setToQR = PyObject2ByteArray(transport.callAttr("get_event_list", i_want_list_py));
+                    setToQR = PyObject2ByteArray(transport.callAttr("get_event_list", i_want_list_py, path));
                 }
 
 
