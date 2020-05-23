@@ -28,6 +28,7 @@ import me.dm7.barcodescanner.zxing.ZXingScannerView;
 import com.journeyapps.barcodescanner.BarcodeEncoder;
 
 import java.io.File;
+import java.lang.reflect.Array;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
@@ -48,6 +49,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
     Python py;
     PyObject transport;
+    PyObject sync;
     String dirName;
 
     int cameraID;
@@ -70,7 +72,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        cameraID = 0;
+        cameraID = 1;
         scannerView = new ZXingScannerView(this);
         setContentView(scannerView);
 
@@ -110,6 +112,9 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         initializePath();
         Log.d("ScanCodeActivity", "Path initialized.");
 
+        // initialize QR code:
+        initializeQRCode();
+
         // Start synchronizer thread
         SynchronizerThread synchronizer = new SynchronizerThread();
         synchronizer.start();
@@ -146,11 +151,13 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
                 Log.d("ScanCodeActivity", "length of str array: " + Arrays.toString(i_have_list).length());
 
+                /*
                 // Show QR code
                 synchronized (shouldUpdateQRMonitor) {
                     setToQR = i_have_list;
                     shouldUpdateQR = true;
-                }
+                }*/
+
 
                 Log.d("ScanCodeActivity", "Show QR code.");
 
@@ -234,33 +241,86 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
 
 
+                // Handle input from Device B
+                PyObject i_want_list_py;
+                synchronized (shouldReceiveMonitor) {
+                    byte[] i_want_list = lastReceived;
+                    //lastReceived = null;
+                    i_want_list_py = byteArray2PyObject(i_want_list);
+                }
+
+                synchronized (shouldUpdateQRMonitor) {
+                    shouldUpdateQR = true;
+                    setToQR = PyObject2ByteArray(transport.callAttr("get_event_list", i_want_list_py));
+                }
+
+
+                // Enable reading qr codes
 
 
 
 
 
 
-            /*
-            // Convert byte[] to PyObject
-            PyObject i_have_list2 = byteArray2PyObject(i_have_list1);
-            Log.d("ScanCodeActivity", "i_have_list2: " + i_have_list2);
-             */
 
+
+
+                /*
+                // Convert byte[] to PyObject
+                PyObject i_have_list2 = byteArray2PyObject(i_have_list1);
+                Log.d("ScanCodeActivity", "i_have_list2: " + i_have_list2);
+                 */
+
+                Log.i("ScanCodeActivity", "Synchronization complete. Please wait for Device B!");
 
             } else if (MainActivity.getDevice() == 'B') {
 
+                // Start accepting QR codes
                 synchronized (shouldReceiveMonitor) {
                     shouldReceive = true;
                 }
 
-                // Receive i_want_list
-                while (true) {
-
-                    if (lastReceived != null) {
-                        byte[] i_have_list = lastReceived;
-                        Log.d("ScanCodeActivitx", "I have received i_have_list: " + Arrays.toString(lastReceived));
-                        break;
+                // Wait for scanner to get a packet.
+                synchronized (shouldReceiveMonitor) {
+                    try {
+                        shouldReceiveMonitor.wait();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
                     }
+                }
+
+
+                byte[] i_want_list;
+                PyObject extension_list_py;
+                synchronized (shouldReceiveMonitor) {
+                    if (lastReceived==null) throw new AssertionError("lastReceived must not be null!");
+                    byte[] i_have_list = lastReceived;
+                    PyObject i_have_list_py = byteArray2PyObject(i_have_list);
+                    PyObject i_want_list_and_extension_list = transport.callAttr("get_i_want_list", i_have_list_py);
+                    PyObject i_want_list_py = i_want_list_and_extension_list.asList().get(0);
+                    i_want_list = PyObject2ByteArray(i_want_list_py);
+                    extension_list_py = i_want_list_and_extension_list.asList().get(1);
+                }
+
+                synchronized (shouldUpdateQRMonitor) {
+                    setToQR = i_want_list;
+                    shouldUpdateQR = true;
+                }
+
+                // Wait for scanner to get a packet.
+                synchronized (shouldReceiveMonitor) {
+                    try {
+                        shouldReceiveMonitor.wait();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                // Read event_list
+                synchronized (shouldReceiveMonitor) {
+                    byte[] event_list = lastReceived;
+                    PyObject event_list_py = byteArray2PyObject(event_list);
+                    sync.callAttr("sync_extensions", extension_list_py, event_list_py);
                 }
 
 
@@ -294,6 +354,13 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         // [__builtins__, __cached__, __doc__, __file__, __loader__, __name__, __package__,
         // __spec__, cbor, get_event_list, get_i_have_list, get_i_want_list, pcap, sync]
 
+        sync = py.getModule("sync");
+        Log.d("ScanCodeActivity", "sync is: " + sync);
+        Log.d("ScanCodeActivity", "sync KEYSET: " + sync.keySet());
+        // sync KEYSET:
+        // [ED25519, FEED, FileInfo, Sync, __builtins__, __cached__, __doc__, __file__, __loader__,
+        // __name__, __package__, __spec__, cbor, compare_files, create_list_of_files, event, os,
+        // pcap, sync_extensions]
     }
 
 
@@ -322,6 +389,19 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         if (false) // if error
             return -1;
         return 0;
+    }
+
+
+    private void initializeQRCode() {
+        if (MainActivity.getDevice() == 'A') {
+            // Get i_have_list
+            PyObject i_have_list_py = transport.callAttr("get_i_have_list", path);
+            //Log.d("ScanCodeActivity", "i_have_list: " + i_have_list_py);
+
+            // Convert PyObject to byte[]
+            byte[] i_have_list = PyObject2ByteArray(i_have_list_py);
+            setBase64ToPopupImageView(i_have_list);
+        }
     }
 
     @Override
@@ -354,9 +434,12 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         synchronized (shouldReceiveMonitor) {
             if (shouldReceive) {
                 shouldReceive = false;
-                lastReceived = Base64.decode(result.getText(), Base64.DEFAULT);
-                playBeep(100);
-                shouldReceiveMonitor.notifyAll();
+                byte[] nowReceived = Base64.decode(result.getText(), Base64.DEFAULT);
+                if (!Arrays.equals(nowReceived, lastReceived)) {
+                    lastReceived = nowReceived;
+                    playBeep(100);
+                    shouldReceiveMonitor.notifyAll();
+                }
             }
         }
 
@@ -426,12 +509,8 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
             Log.d("ScanCodeActivity", "base64Text: " + base64Text);
             Log.d("ScanCodeActivity", "base64Text length: " + base64Text.length());
             BitMatrix bitMatrix = multiFormatWriter.encode(base64Text, BarcodeFormat.QR_CODE, qrSize, qrSize);
-            Log.d("ScanCodeActivity", "111111");
             BarcodeEncoder barcodeEncoder = new BarcodeEncoder();
-            Log.d("ScanCodeActivity", "222222");
             Bitmap bitmap = barcodeEncoder.createBitmap(bitMatrix);
-            Log.d("ScanCodeActivity", "333333");
-            //MainActivity.qrImageView.setImageBitmap(bitmap);
             popupImageView.setImageBitmap(bitmap);
         } catch (WriterException e) {
             e.printStackTrace();
