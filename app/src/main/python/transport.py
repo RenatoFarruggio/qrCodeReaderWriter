@@ -51,7 +51,7 @@ does Device A have and what does Device B have). When it's done, it returns a li
 
 def get_i_want_list(i_have_list):
     list_of_extensions = sync.compare_files(cbor.loads(i_have_list))
-    return cbor.dumps(list_of_extensions)
+    return cbor.dumps(list_of_extensions), list_of_extensions
 
 
 """
