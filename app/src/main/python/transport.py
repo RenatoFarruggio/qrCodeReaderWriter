@@ -38,9 +38,6 @@ Device A creates a list of all files of a specific directory (later, it will be 
 def get_i_have_list(path='udpDir/'):
     # TODO: Change directory to database
     list_of_files = sync.create_list_of_files(path)  # 4
-    """ ADDED FOR ARRAY CONVERSION """
-    array1 = [list(x) for x in array1]
-    """ """
     return cbor.dumps(list_of_files)
 
 

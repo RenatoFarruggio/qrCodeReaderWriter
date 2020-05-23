@@ -28,13 +28,10 @@ import me.dm7.barcodescanner.zxing.ZXingScannerView;
 import com.journeyapps.barcodescanner.BarcodeEncoder;
 
 import java.io.File;
-import java.lang.Object;
-import java.lang.Class;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.util.Arrays;
-
 
 
 public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerView.ResultHandler {
@@ -268,14 +265,10 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
             byte[] array1 = array0.toJava(byte[].class);
             Log.d("ScanCodeActivity", "array1: " + Arrays.toString(array1));
 
-            //Added for array conversion - needs to be fixed, but compiles
-            Python py = Python.getInstance();
-            PyObject pp = py.getModule("transport.py");
-            PyObject array3 = pp.callAttr("get_i_have_list", array1);
+
 
             PyObject array2 = PyObject.fromJava(array1);
             Log.d("ScanCodeActivity", "array2: " + array2);
-            Log.d("ScanCodeActivity", "array3: " + array3);
 
             /*
             // FIXMEE: i_have_list, a PyObject, should be the same as itself transformed into a byte[], transformed back into a PyObject.
