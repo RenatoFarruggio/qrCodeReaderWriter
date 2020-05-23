@@ -62,8 +62,6 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
     volatile private boolean shouldReceive;
     volatile private byte[] lastReceived;
 
-    static Semaphore semaphore = new Semaphore(1);
-
     final Object shouldReceiveMonitor = new Object();
 
     String path;
@@ -157,7 +155,11 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
                 Log.d("ScanCodeActivity", "Show QR code.");
 
                 // Start accepting qr codes
-                try {
+                synchronized (shouldReceiveMonitor) {
+                    shouldReceive = true;
+                }
+
+                /*try {
                     semaphore.acquire();
                     Log.d("ScanCodeActivity", "Semaphore acquired in run of Device A.");
                     shouldReceive = true;
@@ -165,7 +167,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
                     semaphore.release();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
-                }
+                }*/
 
                 // WAIT for receiving //
 
@@ -191,7 +193,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
                 }
 
                 Log.d("ScanCodeActivity", "I've waited.");
-                while (true) {
+                /*while (true) {
                     try {
                         semaphore.acquire();
                         Log.d("ScanCodeActivity", "Semaphore acquired.");
@@ -212,7 +214,8 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                }
+
+                }*/
 
                 /*while (!shouldReceive) {
                     synchronized (shouldReceiveMonitor) {
@@ -340,7 +343,24 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         //String outText = handleResultBySyncingLog(result.getText());
 
 
-        try {
+        synchronized (shouldUpdateQRMonitor) {
+            if (shouldUpdateQR) {
+                shouldUpdateQR = false;
+                setBase64ToPopupImageView(setToQR);
+                setToQR = null;
+            }
+        }
+
+        synchronized (shouldReceiveMonitor) {
+            if (shouldReceive) {
+                shouldReceive = false;
+                lastReceived = Base64.decode(result.getText(), Base64.DEFAULT);
+                playBeep(100);
+                shouldReceiveMonitor.notifyAll();
+            }
+        }
+
+        /*try {
             semaphore.acquire();
             try {
                 Log.d("ScanCodeActivity", "shouldReceive: " + shouldReceive);
@@ -364,7 +384,10 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
             }
         } catch (InterruptedException e) {
             e.printStackTrace();
-        }
+        }*/
+
+
+
         /*synchronized (shouldReceiveMonitor) {
             if (shouldReceive) {
                 shouldReceive = false;
