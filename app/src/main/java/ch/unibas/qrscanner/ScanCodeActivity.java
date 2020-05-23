@@ -356,6 +356,18 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         onResume();
     }
 
+    protected void switchCameraToFrontcam() {
+        onPause();
+        cameraID = 1;
+        onResume();
+    }
+
+    protected void switchCameraToBackcam() {
+        onPause();
+        cameraID = 0;
+        onResume();
+    }
+
     public byte[] rd_callback() { // called when logSync wants to receive
         lastReceived = null;
         shouldReceive = true;
