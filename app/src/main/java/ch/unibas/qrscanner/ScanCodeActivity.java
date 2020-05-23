@@ -151,13 +151,6 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
                 Log.d("ScanCodeActivity", "length of str array: " + Arrays.toString(i_have_list).length());
 
-                /*
-                // Show QR code
-                synchronized (shouldUpdateQRMonitor) {
-                    setToQR = i_have_list;
-                    shouldUpdateQR = true;
-                }*/
-
 
                 Log.d("ScanCodeActivity", "Show QR code.");
 
@@ -166,28 +159,9 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
                     shouldReceive = true;
                 }
 
-                /*try {
-                    semaphore.acquire();
-                    Log.d("ScanCodeActivity", "Semaphore acquired in run of Device A.");
-                    shouldReceive = true;
-                    Log.d("ScanCodeActivity", "Semaphore released in run of Device A.");
-                    semaphore.release();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }*/
-
                 // WAIT for receiving //
 
                 Log.d("ScanCodeActivity", "Wait for receiving...");
-
-
-                /*try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }*/
-
-                Log.d("ScanCodeActivity", "1111");
 
                 synchronized (shouldReceiveMonitor) {
                     try {
@@ -200,52 +174,12 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
                 }
 
                 Log.d("ScanCodeActivity", "I've waited.");
-                /*while (true) {
-                    try {
-                        semaphore.acquire();
-                        Log.d("ScanCodeActivity", "Semaphore acquired.");
-                        try {
-                            // do stuff
-                            if (lastReceived != null) {
-                                Log.d("ScanCodeActivity", "I don't know what to do with it, but this is lastReceived: " + Arrays.toString(lastReceived));
-                                lastReceived = null;
-                                break;
-                            }
-                        } finally {
-                            Log.d("ScanCodeActivity", "Semaphore released.");
-                            semaphore.release();
-                            synchronized (Thread.currentThread()) {
-                                Thread.currentThread().wait(1000);
-                            }
-                        }
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-
-                }*/
-
-                /*while (!shouldReceive) {
-                    synchronized (shouldReceiveMonitor) {
-                        try {
-                            shouldReceiveMonitor.wait();
-                            Log.d("ScanCodeActivity", "Thread B was notified!");
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-                 */
-                Log.d("ScanCodeActivity", "World!");
-
-
-
 
 
                 // Handle input from Device B
                 PyObject i_want_list_py;
                 synchronized (shouldReceiveMonitor) {
                     byte[] i_want_list = lastReceived;
-                    //lastReceived = null;
                     i_want_list_py = byteArray2PyObject(i_want_list);
                 }
 
