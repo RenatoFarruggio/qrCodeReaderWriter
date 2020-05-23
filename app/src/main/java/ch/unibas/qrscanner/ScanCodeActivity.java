@@ -13,7 +13,6 @@ import android.util.Log;
 import android.view.Window;
 import android.widget.ImageView;
 
-import com.chaquo.python.Kwarg;
 import com.chaquo.python.PyObject;
 import com.chaquo.python.Python;
 import com.chaquo.python.android.AndroidPlatform;
@@ -28,24 +27,16 @@ import me.dm7.barcodescanner.zxing.ZXingScannerView;
 import com.journeyapps.barcodescanner.BarcodeEncoder;
 
 import java.io.File;
-import java.lang.reflect.Array;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.FileSystems;
-import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.concurrent.Semaphore;
 
 
 public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerView.ResultHandler {
 
-    // TODO: make a daemon thread for camera activity and close it in onBackPressed().
-    //  (In case camera pauses when running python code.)
     ZXingScannerView scannerView;
     ToneGenerator toneGenerator;
     Dialog qrPopupDialog;
     ImageView popupImageView;
     int qrSize;
-    char device; // 'A' or 'B'
 
     Python py;
     PyObject transport;
@@ -187,23 +178,6 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
                     shouldUpdateQR = true;
                     setToQR = PyObject2ByteArray(transport.callAttr("get_event_list", i_want_list_py, path));
                 }
-
-
-                // Enable reading qr codes
-
-
-
-
-
-
-
-
-
-                /*
-                // Convert byte[] to PyObject
-                PyObject i_have_list2 = byteArray2PyObject(i_have_list1);
-                Log.d("ScanCodeActivity", "i_have_list2: " + i_have_list2);
-                 */
 
                 Log.i("ScanCodeActivity", "Synchronization complete. Please wait for Device B!");
 
