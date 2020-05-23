@@ -35,10 +35,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         resultTextView = (TextView)findViewById(R.id.result_text);
-        //scanButton = (Button) findViewById(R.id.btn_scan);
-        // TODO: resolve errors
-        //  - Cannot resolve symbol 'btn_scan_A'
-        //  - Cannot resolve symbol 'btn_scan_B'
         scanButtonA = (Button) findViewById(R.id.btn_scan_A);
         scanButtonB = (Button) findViewById(R.id.btn_scan_B);
         qrImageView = (ImageView) findViewById(R.id.result_qr_code);
