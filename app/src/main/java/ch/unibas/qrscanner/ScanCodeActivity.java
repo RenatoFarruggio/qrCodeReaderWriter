@@ -49,6 +49,8 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
     PyObject transport;
     String dirName;
 
+    int cameraID;
+
     int lastNum = 0;
 
     boolean shouldReceive;
@@ -58,6 +60,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        cameraID = 1;
         scannerView = new ZXingScannerView(this);
         setContentView(scannerView);
 
@@ -91,7 +94,12 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
     @Override
     public void handleResult(Result result) {
-        //playBeep(500, 500);
+        onPause();
+
+
+        Log.d("ScanCodeActivity", "FOUND RESULT!");
+
+        playBeep(500, 500);
         //MainActivity.resultTextView.setText(result.getText());
 
 
@@ -106,10 +114,6 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
             lastReceived = Base64.decode(result.getText(), Base64.DEFAULT);
             //lastReceived = Base64.decode(result.getRawBytes(), Base64.DEFAULT);
             playBeep(100);
-            // TODO: optimize this (maybe remove it?)
-            // These commands are needed to prevent the camera from freezing
-            onPause();
-            onResume();
         }
 
 
@@ -118,6 +122,9 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         // Write text into QR code
         //setTextToPopupImageView(outText);
         //setBase64ToPopupImageView(outData);
+
+        onResume();
+        switchCamera();
     }
 
     private String handleResultByCounting(String text) {
@@ -340,7 +347,13 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         super.onResume();
 
         scannerView.setResultHandler(this);
-        scannerView.startCamera(1);
+        scannerView.startCamera(cameraID);
+    }
+
+    protected void switchCamera() {
+        onPause();
+        cameraID = (cameraID+1)%2;
+        onResume();
     }
 
     public byte[] rd_callback() { // called when logSync wants to receive
