@@ -56,6 +56,8 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
     boolean shouldReceive;
     byte[] lastReceived;
 
+    String path;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,16 +92,152 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         // Initialize Python
         initializePython();
 
+        // Setup Path
+        initializePath();
+        Log.d("ScanCodeActivity", "Path initialized.");
+
+        // Start synchronizer thread
+        SynchronizerThread synchronizer = new SynchronizerThread();
+        synchronizer.run();
+    }
+
+    /**
+     * Synchronizes Database from Device A to device B.
+     */
+    class SynchronizerThread extends Thread {
+
+
+        public void run() {
+           while (true) {
+               try {
+                   Log.d("ScanCodeActivity", "THIS IS A MESSAGE");
+                   Thread.sleep(1000);
+               } catch (InterruptedException e) {
+                   e.printStackTrace();
+               }
+           }
+        }
+
+        public void run1() {
+            // Synchronize
+            if (MainActivity.getDevice() == 'A') {
+                // Get i_have_list
+                PyObject i_have_list_py = transport.callAttr("get_i_have_list", path);
+                Log.d("ScanCodeActivity", "i_have_list: " + i_have_list_py);
+
+                // Convert PyObject to byte[]
+                byte[] i_have_list = PyObject2ByteArray(i_have_list_py);
+                Log.d("ScanCodeActivity", "i_have_list1: " + Arrays.toString(i_have_list));
+                Log.d("ScanCodeActivity", "length of array: " + i_have_list.length);
+
+                Log.d("ScanCodeActivity", "length of str array: " + Arrays.toString(i_have_list).length());
+
+                // Show QR code
+                setBase64ToPopupImageView(i_have_list);
+
+                // Start accepting qr codes
+                //shouldReceive = true;
+
+                // WAIT for receiving //
+                //while (true) {
+
+                //}
+
+
+
+
+
+
+            /*
+            // Convert byte[] to PyObject
+            PyObject i_have_list2 = byteArray2PyObject(i_have_list1);
+            Log.d("ScanCodeActivity", "i_have_list2: " + i_have_list2);
+             */
+
+
+            } else if (MainActivity.getDevice() == 'B') {
+
+                shouldReceive = true;
+
+                // Receive i_want_list
+                while (true) {
+
+                    if (lastReceived != null) {
+                        byte[] i_have_list = lastReceived;
+                        Log.d("ScanCodeActivitx", "I have received i_have_list: " + Arrays.toString(lastReceived));
+                        break;
+                    }
+                }
+
+
+                Log.i("ScanCodeActivity", "Synchronization complete.");
+
+            }
+
+        }
+
+    }
+
+
+    private void initializePython() {
+
+        // Start Python
+        if (! Python.isStarted()) {
+            Python.start(new AndroidPlatform(this));
+        }
+
+        // Get python instance
+        py = Python.getInstance();
+        Log.d("ScanCodeActivity", "Python is: " + py);
+
+
+        // Python equivalent to
+        //  "import transport"
+        transport = py.getModule("transport");
+        Log.d("ScanCodeActivity", "transport is: " + transport);
+        Log.d("ScanCodeActivity", "transport KEYSET: " + transport.keySet());
+        // transport KEYSET:
+        // [__builtins__, __cached__, __doc__, __file__, __loader__, __name__, __package__,
+        // __spec__, cbor, get_event_list, get_i_have_list, get_i_want_list, pcap, sync]
+
+    }
+
+
+    private int initializePath() {
+        // TODO: implement absolutePathname String parameter
+
+        // Create '/databases' directory in ch.unibas.qrscanner.files
+        path = getApplicationContext().getFilesDir().getPath();
+        if (!path.substring(path.lastIndexOf("/")+1).equals("files")) {
+            path += "/files";
+        }
+        path += dirName;
+
+        File f = new File(path);
+        Log.d("ScanCodeActivity", "Path: " + path);
+        if (!f.exists())
+            Log.d("ScanCodeActivity", "Created Path: " + path);
+        f.mkdirs();
+
+        File[] files = f.listFiles();
+        for (File inFile : files) {
+            Log.d("ScanCodeActivity", "inFile: " + inFile);
+        }
+
+
+        if (false) // if error
+            return -1;
+        return 0;
     }
 
     @Override
     public void handleResult(Result result) {
-        onPause();
+        //onPause();
 
 
         Log.d("ScanCodeActivity", "FOUND RESULT!");
 
-        playBeep(500, 500);
+        playBeep(100);
         //MainActivity.resultTextView.setText(result.getText());
 
 
@@ -123,9 +261,128 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         //setTextToPopupImageView(outText);
         //setBase64ToPopupImageView(outData);
 
+        onPause();
         onResume();
-        switchCamera();
     }
+
+
+    private static byte[] PyObject2ByteArray(PyObject o) {
+        return o.toJava(byte[].class);
+    }
+
+    private PyObject byteArray2PyObject(byte[] array) {
+        return transport.callAttr("get_bytes_from_tojava_pyobject", PyObject.fromJava(array));
+    }
+
+
+    private int setBase64ToPopupImageView(byte[] binaryData) {
+        MultiFormatWriter multiFormatWriter = new MultiFormatWriter();
+        try {
+            String base64Text = Base64.encodeToString(binaryData, Base64.DEFAULT);
+            Log.d("ScanCodeActivity", "base64Text: " + base64Text);
+            Log.d("ScanCodeActivity", "base64Text length: " + base64Text.length());
+            BitMatrix bitMatrix = multiFormatWriter.encode(base64Text, BarcodeFormat.QR_CODE, qrSize, qrSize);
+            Log.d("ScanCodeActivity", "111111");
+            BarcodeEncoder barcodeEncoder = new BarcodeEncoder();
+            Log.d("ScanCodeActivity", "222222");
+            Bitmap bitmap = barcodeEncoder.createBitmap(bitMatrix);
+            Log.d("ScanCodeActivity", "333333");
+            //MainActivity.qrImageView.setImageBitmap(bitmap);
+            popupImageView.setImageBitmap(bitmap);
+        } catch (WriterException e) {
+            e.printStackTrace();
+            return -1;
+        }
+        return 0;
+    }
+
+    private void playBeep(int playLengthInMilliseconds, int pauseLengthInMilliseconds) {
+        playBeep(playLengthInMilliseconds);
+        SystemClock.sleep(pauseLengthInMilliseconds);
+    }
+
+    private void playBeep(int playLengthInMilliseconds) {
+        toneGenerator.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD);
+        SystemClock.sleep(playLengthInMilliseconds);
+        toneGenerator.stopTone();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        scannerView.stopCamera();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        scannerView.setResultHandler(this);
+        scannerView.startCamera(cameraID);
+    }
+
+    protected void switchCamera() {
+        onPause();
+        cameraID = (cameraID+1)%2;
+        onResume();
+    }
+
+    protected void switchCameraToFrontcam() {
+        onPause();
+        cameraID = 1;
+        onResume();
+    }
+
+    protected void switchCameraToBackcam() {
+        onPause();
+        cameraID = 0;
+        onResume();
+    }
+
+    /*
+    // CALLBACKS
+    public byte[] rd_callback() { // called when logSync wants to receive
+        lastReceived = null;
+        shouldReceive = true;
+        while (true) {
+            if (lastReceived != null) {
+                return lastReceived;
+            }
+        }
+        //return "TestString".getBytes(StandardCharsets.UTF_8);
+    }
+
+    // Returns 0 if successful.
+    // Returns -1 if error occured.
+    public int wr_callback(byte[] binData) {  // called when logSync wants to send
+
+        int errCode = setBase64ToPopupImageView(binData);
+        return errCode;
+    }*/
+
+
+    //// THIS SECTION IS FOR DEV TESTING PURPOSES ONLY ////
+
+    // Return a string of a certain bytesize.
+    // 1 char (utf-16) needs 2 bytes.
+    private String getStringOfByteSize(int size, int code) {
+        // Must have: size >= 1
+
+
+        char[] chars = new char[size-1];
+        Arrays.fill(chars, 'a');
+        //chars[chars.length-1] = (char) code;
+        String text = new String(chars) + code;
+
+        //Log.d("ScanCodeActivity", "whole object: " + text);
+        //Log.d("ScanCodeActivity", "utf-8: " + text.getBytes(StandardCharsets.UTF_8));
+        //Log.d("ScanCodeActivity", "utf-16: " + text.getBytes(StandardCharsets.UTF_16));
+        //Log.d("ScanCodeActivity", "byteSize: " + text.getBytes(StandardCharsets.UTF_8).length);
+        //Log.d("ScanCodeActivity", "code: " + text.charAt(size-1));
+        return text;
+    }
+
 
     private String handleResultByCounting(String text) {
         int num = Integer.parseInt(text);
@@ -188,109 +445,6 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         return outTextLargePacket;
     }
 
-    private void initializePython() {
-
-        // Start Python
-        if (! Python.isStarted()) {
-            Python.start(new AndroidPlatform(this));
-        }
-
-        // Get python instance
-        py = Python.getInstance();
-        Log.d("ScanCodeActivity", "Python is: " + py);
-
-
-        // Python equivalent to
-        //  "import transport"
-        transport = py.getModule("transport");
-        Log.d("ScanCodeActivity", "transport is: " + transport);
-        Log.d("ScanCodeActivity", "transport KEYSET: " + transport.keySet());
-        // transport KEYSET:
-        // [__builtins__, __cached__, __doc__, __file__, __loader__, __name__, __package__,
-        // __spec__, cbor, get_event_list, get_i_have_list, get_i_want_list, pcap, sync]
-
-
-        //PyObject transportObject = py.getModule("transport");
-        //Log.d("ScanCodeActivity", "pythonModule is: " + transportObject);
-
-        // Python equivalent to
-        //  "import sys"
-        PyObject sys = py.getModule("sys");
-        Log.d("ScanCodeActivity", "sys is: " + sys);
-        Log.d("ScanCodeActivity", "SYS KEYSET: " + sys.keySet());
-        // sys KEYSET:
-        // [__breakpointhook__, __displayhook__, __doc__, __excepthook__, __interactivehook__,
-        // __loader__, __name__, __package__, __spec__, __stderr__, __stdin__, __stdout__,
-        // __unraisablehook__, __warningregistry__, _base_executable, _clear_type_cache,
-        // _current_frames, _debugmallocstats, _framework, _getframe, _git, _home, _xoptions,
-        // abiflags, addaudithook, api_version, argv, audit, base_exec_prefix, base_prefix,
-        // breakpointhook, builtin_module_names, byteorder, call_tracing, callstats, copyright,
-        // displayhook, dont_write_bytecode, exc_info, excepthook, exec_prefix, executable, exit,
-        // flags, float_info, float_repr_style, get_asyncgen_hooks,
-        // get_coroutine_origin_tracking_depth, getallocatedblocks, getandroidapilevel,
-        // getcheckinterval, getdefaultencoding, getdlopenflags, getfilesystemencodeerrors,
-        // getfilesystemencoding, getprofile, getrecursionlimit, getrefcount, getsizeof,
-        // getswitchinterval, gettrace, hash_info, hexversion, implementation, int_info, intern,
-        // is_finalizing, maxsize, maxunicode, meta_path, modules, path, path_hooks,
-        // path_importer_cache, platform, prefix, pycache_prefix, set_asyncgen_hooks,
-        // set_coroutine_origin_tracking_depth, setcheckinterval, setdlopenflags, setprofile,
-        // setrecursionlimit, setswitchinterval, settrace, stderr, stdin, stdout, thread_info,
-        // unraisablehook, version, version_info, warnoptions]
-
-
-
-        Log.d("ScanCodeActivity", "222");
-
-        // Create '/databases' directory in ch.unibas.qrscanner.files
-        String path = getApplicationContext().getFilesDir().getPath();
-        if (!path.substring(path.lastIndexOf("/")+1).equals("files")) {
-            path += "/files";
-        }
-        path += dirName;
-
-        File f = new File(path);
-        Log.d("ScanCodeActivity", "Path: " + path);
-        if (!f.exists())
-            Log.d("ScanCodeActivity", "Created Path: " + path);
-            f.mkdirs();
-
-        File[] files = f.listFiles();
-        for (File inFile : files) {
-            Log.d("ScanCodeActivity", "inFile: " + inFile);
-        }
-
-
-        Log.d("ScanCodeActivity", "333");
-        // Synchronize
-        if (MainActivity.getDevice() == 'A') {
-            // Get i_have_list
-            PyObject i_have_list = transport.callAttr("get_i_have_list", path);
-            Log.d("ScanCodeActivity", "i_have_list: " + i_have_list);
-
-            // Convert PyObject to byte[]
-            byte[] i_have_list1 = PyObject2ByteArray(i_have_list);
-            Log.d("ScanCodeActivity", "i_have_list1: " + Arrays.toString(i_have_list1));
-
-            // Convert byte[] to PyObject
-            PyObject i_have_list2 = byteArray2PyObject(i_have_list1);
-            Log.d("ScanCodeActivity", "i_have_list2: " + i_have_list2);
-
-
-        } else if (MainActivity.getDevice() == 'B') {
-
-
-        }
-
-
-    }
-
-    private static byte[] PyObject2ByteArray(PyObject o) {
-        return o.toJava(byte[].class);
-    }
-
-    private PyObject byteArray2PyObject(byte[] array) {
-        return transport.callAttr("get_bytes_from_tojava_pyobject", PyObject.fromJava(array));
-    }
 
     private void setTextToPopupImageView(String text) {
         // Initially copied from:
@@ -307,107 +461,6 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
             e.printStackTrace();
         }
     }
-
-    private int setBase64ToPopupImageView(byte[] binaryData) {
-        MultiFormatWriter multiFormatWriter = new MultiFormatWriter();
-        try {
-            String base64Text = Base64.encodeToString(binaryData, Base64.DEFAULT);
-            BitMatrix bitMatrix = multiFormatWriter.encode(base64Text, BarcodeFormat.QR_CODE, qrSize, qrSize);
-            BarcodeEncoder barcodeEncoder = new BarcodeEncoder();
-            Bitmap bitmap = barcodeEncoder.createBitmap(bitMatrix);
-            //MainActivity.qrImageView.setImageBitmap(bitmap);
-            popupImageView.setImageBitmap(bitmap);
-        } catch (WriterException e) {
-            e.printStackTrace();
-            return -1;
-        }
-        return 0;
-    }
-
-    private void playBeep(int playLengthInMilliseconds, int pauseLengthInMilliseconds) {
-        playBeep(playLengthInMilliseconds);
-        SystemClock.sleep(pauseLengthInMilliseconds);
-    }
-
-    private void playBeep(int playLengthInMilliseconds) {
-        toneGenerator.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD);
-        SystemClock.sleep(playLengthInMilliseconds);
-        toneGenerator.stopTone();
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-
-        scannerView.stopCamera();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-        scannerView.setResultHandler(this);
-        scannerView.startCamera(cameraID);
-    }
-
-    protected void switchCamera() {
-        onPause();
-        cameraID = (cameraID+1)%2;
-        onResume();
-    }
-
-    protected void switchCameraToFrontcam() {
-        onPause();
-        cameraID = 1;
-        onResume();
-    }
-
-    protected void switchCameraToBackcam() {
-        onPause();
-        cameraID = 0;
-        onResume();
-    }
-
-    public byte[] rd_callback() { // called when logSync wants to receive
-        lastReceived = null;
-        shouldReceive = true;
-        while (true) {
-            if (lastReceived != null) {
-                return lastReceived;
-            }
-        }
-        //return "TestString".getBytes(StandardCharsets.UTF_8);
-    }
-
-    // Returns 0 if successful.
-    // Returns -1 if error occured.
-    public int wr_callback(byte[] binData) {  // called when logSync wants to send
-        int errCode = setBase64ToPopupImageView(binData);
-        return errCode;
-    }
-
-
-    //// THIS SECTION IS FOR DEV TESTING PURPOSES ONLY ////
-
-    // Return a string of a certain bytesize.
-    // 1 char (utf-16) needs 2 bytes.
-    private String getStringOfByteSize(int size, int code) {
-        // Must have: size >= 1
-
-
-        char[] chars = new char[size-1];
-        Arrays.fill(chars, 'a');
-        //chars[chars.length-1] = (char) code;
-        String text = new String(chars) + code;
-
-        //Log.d("ScanCodeActivity", "whole object: " + text);
-        //Log.d("ScanCodeActivity", "utf-8: " + text.getBytes(StandardCharsets.UTF_8));
-        //Log.d("ScanCodeActivity", "utf-16: " + text.getBytes(StandardCharsets.UTF_16));
-        //Log.d("ScanCodeActivity", "byteSize: " + text.getBytes(StandardCharsets.UTF_8).length);
-        //Log.d("ScanCodeActivity", "code: " + text.charAt(size-1));
-        return text;
-    }
-
     ///////////////////////////////////////////////////////
 
 }
