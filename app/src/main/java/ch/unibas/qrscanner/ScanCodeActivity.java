@@ -60,7 +60,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
     private String path;
 
-    private static final int PACKETSIZE = 96;
+    private static final int PACKETSIZE = 24; //96;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -137,8 +137,8 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
                 PyObject i_have_list_py = transport.callAttr("get_i_have_list", path);
                 Log.d("ScanCodeActivity", "i_have_list: " + i_have_list_py);
 
-                // Convert PyObject to byte[]
-                byte[] i_have_list = PyObject2ByteArray(i_have_list_py);
+                // Convert
+                byte[] i_have_list = pyObject2ByteArray(i_have_list_py);
                 Log.d("ScanCodeActivity", "i_have_list: " + Arrays.toString(i_have_list));
                 Log.d("ScanCodeActivity", "i_have_list length: " + i_have_list.length);
 
@@ -151,21 +151,25 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
                 receivePacketAsSubPackets();
 
                 // Handle i_want_list
-                PyObject i_want_list_py;
+                byte[] i_want_list;
                 synchronized (shouldReceiveMonitor) {
-                    byte[] i_want_list = wholeInput;
-                    i_want_list_py = byteArray2PyObject(i_want_list);
+                    i_want_list = wholeInput;
+                    wholeInput = new byte[0];
                 }
+                PyObject i_want_list_py = byteArray2PyObject(i_want_list);
+                PyObject event_list_py = transport.callAttr("get_event_list", i_want_list_py, path);
+                byte[] event_list = pyObject2ByteArray(event_list_py);
 
                 //// Step 3: Send event_list to B ////
-
+                sendPacketAsSubPackets(event_list);
+                /*
                 // Set new QR code. Need to read a qr code to make this change effective.
                 synchronized (shouldUpdateQRMonitor) {
                     byte[] toQRView = PyObject2ByteArray(transport.callAttr("get_event_list", i_want_list_py, path));
                     setToQR = toQRView;
                     Log.d("ScanCodeActivity", "Set QR code to byte[] of length: " + toQRView.length);
                     shouldUpdateQR = true;
-                }
+                }*/
 
                 Log.i("ScanCodeActivity", "Synchronization complete. Please wait for Device B to finish!");
 
@@ -185,12 +189,15 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
                     PyObject i_have_list_py = byteArray2PyObject(i_have_list);
                     PyObject i_want_list_and_extension_list = transport.callAttr("get_i_want_list", i_have_list_py, path);
                     PyObject i_want_list_py = i_want_list_and_extension_list.asList().get(0);
-                    i_want_list = PyObject2ByteArray(i_want_list_py);
+                    i_want_list = pyObject2ByteArray(i_want_list_py);
                     extension_list_py = i_want_list_and_extension_list.asList().get(1);
                     wholeInput = new byte[0];
                 }
 
                 //// Step 2: Send i_want_list to A ////
+                sendPacketAsSubPackets(i_want_list);
+
+                /*
                 // Set new QR code. Need to read a qr code to make this change effective.
                 synchronized (shouldUpdateQRMonitor) {
                     setToQR = i_want_list;
@@ -202,21 +209,22 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
                 synchronized (shouldReceiveMonitor) {
                     shouldReceive = true;
                     Log.d("ScanCodeActivity", "shouldReceive set to " + shouldReceive);
-                }
+                }*/
 
                 //// Step 3: Receive event_list from A ////
+                receivePacketAsSubPackets();
                 // Wait for scanner to get a packet (event_list).
-                synchronized (shouldReceiveMonitor) {
+                /*synchronized (shouldReceiveMonitor) {
                     try {
                         shouldReceiveMonitor.wait();
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                }
+                }*/
 
                 // Read event_list
                 synchronized (shouldReceiveMonitor) {
-                    byte[] event_list = lastReceived;
+                    byte[] event_list = wholeInput;
                     PyObject event_list_py = byteArray2PyObject(event_list);
                     transport.callAttr("sync_extensions", extension_list_py, event_list_py, path);
                 }
@@ -291,7 +299,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
             //Log.d("ScanCodeActivity", "i_have_list: " + i_have_list_py);
 
             // Convert PyObject to byte[]
-            byte[] i_have_list = PyObject2ByteArray(i_have_list_py);
+            byte[] i_have_list = pyObject2ByteArray(i_have_list_py);
 
             // Extract subPacket
             boolean last = (i_have_list.length < PACKETSIZE);
@@ -345,6 +353,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
                 } else {
                     Log.d("ScanCodeActivity", "Read same qr code as before.");
                 }
+
             }
         }
 
@@ -353,7 +362,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
     }
 
 
-    private static byte[] PyObject2ByteArray(PyObject o) {
+    private static byte[] pyObject2ByteArray(PyObject o) {
         return o.toJava(byte[].class);
     }
 
@@ -407,12 +416,14 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
             }
 
             Log.d("ScanCodeActivity", "Wait for receiving...");
-            synchronized (shouldReceiveMonitor) {
-                shouldReceive = true;
-                try {
-                    shouldReceiveMonitor.wait();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+            if (!last) {
+                synchronized (shouldReceiveMonitor) {
+                    shouldReceive = true;
+                    try {
+                        shouldReceiveMonitor.wait();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
             Log.d("ScanCodeActivity", "Received a packet.");
