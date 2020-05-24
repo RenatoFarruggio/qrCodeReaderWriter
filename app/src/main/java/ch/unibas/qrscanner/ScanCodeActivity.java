@@ -228,7 +228,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
                 synchronized (shouldReceiveMonitor) {
                     byte[] event_list = lastReceived;
                     PyObject event_list_py = byteArray2PyObject(event_list);
-                    sync.callAttr("sync_extensions", extension_list_py, event_list_py);
+                    transport.callAttr("sync_extensions", extension_list_py, event_list_py);
                 }
 
 
@@ -261,14 +261,6 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         // transport KEYSET:
         // [__builtins__, __cached__, __doc__, __file__, __loader__, __name__, __package__,
         // __spec__, cbor, get_event_list, get_i_have_list, get_i_want_list, pcap, sync]
-
-        sync = py.getModule("sync");
-        Log.d("ScanCodeActivity", "sync is: " + sync);
-        Log.d("ScanCodeActivity", "sync KEYSET: " + sync.keySet());
-        // sync KEYSET:
-        // [ED25519, FEED, FileInfo, Sync, __builtins__, __cached__, __doc__, __file__, __loader__,
-        // __name__, __package__, __spec__, cbor, compare_files, create_list_of_files, event, os,
-        // pcap, sync_extensions]
     }
 
 

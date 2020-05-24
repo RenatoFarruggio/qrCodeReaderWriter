@@ -78,6 +78,8 @@ def get_event_list(i_want_list, path='udpDir/'):
 
     return cbor.dumps(event_list)
 
+def sync_extensions(compared_files, extensions_files):
+    sync.sync_extensions(compared_files, extensions_files)
 
 def get_bytes_from_tojava_pyobject(b):
     return bytes(b)
