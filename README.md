@@ -87,9 +87,13 @@ All meeting notes are located in [the diary](https://github.com/cn-uofbasel/BACn
 * ~~__Import logSync__~~
 * ~~Interface testing: Can we import logSync?~~
 * ~~Interface testing: Do callbacks work from python back to java?~~
-* Remote add this repo to BACnet and pull.
+* Rewrite [API](#api)
+* Rewrite [Execution](#execution)
+* Rewrite [Python-Example](#python-example)
+* Remote add this repo to BACnet and pull
 * Implement packet splitting
+* Write down theoretical advanced transport protocol
 * Implement advanced transport protocol
-* Write specifications for integration for group 10 KotlinUI.
-* Add 2 input variables for ScanCodeActivity. One for Path (by calling getApplicationContext().getFilesDir().getPath()), One for Device ('A' or 'B').
+* Write specifications for integration for group 10 KotlinUI
+* Add 2 input variables for ScanCodeActivity. One for Path (by calling getApplicationContext().getFilesDir().getPath()), One for Device ('A' or 'B')
 * Get logSync to run successfully
