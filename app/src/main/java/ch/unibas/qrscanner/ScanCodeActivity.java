@@ -108,6 +108,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
         // initialize QR code:
         initializeQRCode();
+        Log.d("ScanCodeActivity", "Set initial QR code for device A.");
 
         // Start synchronizer thread
         SynchronizerThread synchronizer = new SynchronizerThread();
@@ -130,11 +131,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
                 byte[] i_have_list = PyObject2ByteArray(i_have_list_py);
                 Log.d("ScanCodeActivity", "i_have_list1: " + Arrays.toString(i_have_list));
                 Log.d("ScanCodeActivity", "length of array: " + i_have_list.length);
-
                 Log.d("ScanCodeActivity", "length of str array: " + Arrays.toString(i_have_list).length());
-
-
-                Log.d("ScanCodeActivity", "Show QR code.");
 
                 // Start accepting qr codes
                 synchronized (shouldReceiveMonitor) {
@@ -176,7 +173,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
                     shouldReceive = true;
                 }
 
-                // Wait for scanner to get a packet.
+                // Wait for scanner to get a packet (i_have_list).
                 synchronized (shouldReceiveMonitor) {
                     try {
                         shouldReceiveMonitor.wait();
@@ -227,8 +224,11 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
                     transport.callAttr("sync_extensions", extension_list_py, event_list_py, path);
                 }
 
+                toneGenerator.startTone(AudioManager.STREAM_ALARM, 1500);
 
                 Log.i("ScanCodeActivity", "Synchronization complete. You may exit both Apps now.");
+
+                //onBackPressed();
             } else {
                 throw new IllegalArgumentException("Device should be 'A' or 'B'.");
             }
@@ -277,7 +277,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
         File[] files = f.listFiles();
         for (File inFile : files) {
-            Log.d("ScanCodeActivity", "inFile: " + inFile);
+            Log.d("ScanCodeActivity", "File in path: " + inFile);
         }
 
 
@@ -305,21 +305,12 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
         //MainActivity.resultTextView.setText(result.getText());
 
-
-        // Update QR code if needed
-        synchronized (shouldUpdateQRMonitor) {
-            if (shouldUpdateQR) {
-                shouldUpdateQR = false;
-                setBase64ToPopupImageView(setToQR);
-                setToQR = null;
-            }
-        }
-
         // Handle QR code result
         synchronized (shouldReceiveMonitor) {
+            Log.d("ScanCodeActivity", "shouldReceive: " + shouldReceive);
             if (shouldReceive) {
-                Log.d("ScanCodeActivity", "222");
                 byte[] nowReceived = Base64.decode(result.getText(), Base64.DEFAULT);
+                Log.d("ScanCodeActivity", "nowReceived: " + Arrays.toString(nowReceived));
                 if (!Arrays.equals(nowReceived, lastReceived)) {
                     shouldReceive = false;
                     Log.d("ScanCodeActivity", "Read new qr code.");
@@ -362,6 +353,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
             String base64Text = Base64.encodeToString(binaryData, Base64.DEFAULT);
             Log.d("ScanCodeActivity", "base64Text: " + base64Text);
             Log.d("ScanCodeActivity", "base64Text length: " + base64Text.length());
+            // TODO: ENABLE SENDING EMPTY PACKETS
             BitMatrix bitMatrix = multiFormatWriter.encode(base64Text, BarcodeFormat.QR_CODE, qrSize, qrSize);
             BarcodeEncoder barcodeEncoder = new BarcodeEncoder();
             Bitmap bitmap = barcodeEncoder.createBitmap(bitMatrix);
