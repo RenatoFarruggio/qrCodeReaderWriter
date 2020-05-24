@@ -90,4 +90,5 @@ All meeting notes are located in the diary, [here](https://github.com/cn-uofbase
 * Remote add this repo to BACnet and pull.
 * Implement packet splitting
 * Implement advanced transport protocol
+* Write specifications for integration for group 10 KotlinUI.
 * Get logSync to run successfully
