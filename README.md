@@ -91,4 +91,5 @@ All meeting notes are located in [the diary](https://github.com/cn-uofbasel/BACn
 * Implement packet splitting
 * Implement advanced transport protocol
 * Write specifications for integration for group 10 KotlinUI.
+* Add 2 input variables for ScanCodeActivity. One for Path (by calling getApplicationContext().getFilesDir().getPath()), One for Device ('A' or 'B').
 * Get logSync to run successfully
