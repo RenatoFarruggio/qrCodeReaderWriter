@@ -192,7 +192,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
                     if (lastReceived==null) throw new AssertionError("lastReceived must not be null!");
                     byte[] i_have_list = lastReceived;
                     PyObject i_have_list_py = byteArray2PyObject(i_have_list);
-                    PyObject i_want_list_and_extension_list = transport.callAttr("get_i_want_list", i_have_list_py);
+                    PyObject i_want_list_and_extension_list = transport.callAttr("get_i_want_list", i_have_list_py, path);
                     PyObject i_want_list_py = i_want_list_and_extension_list.asList().get(0);
                     i_want_list = PyObject2ByteArray(i_want_list_py);
                     extension_list_py = i_want_list_and_extension_list.asList().get(1);
@@ -218,7 +218,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
                 synchronized (shouldReceiveMonitor) {
                     byte[] event_list = lastReceived;
                     PyObject event_list_py = byteArray2PyObject(event_list);
-                    transport.callAttr("sync_extensions", extension_list_py, event_list_py);
+                    transport.callAttr("sync_extensions", extension_list_py, event_list_py, path);
                 }
 
 
@@ -312,9 +312,10 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         // Handle QR code result
         synchronized (shouldReceiveMonitor) {
             if (shouldReceive) {
-                shouldReceive = false;
+                Log.d("ScanCodeActivity", "222");
                 byte[] nowReceived = Base64.decode(result.getText(), Base64.DEFAULT);
                 if (!Arrays.equals(nowReceived, lastReceived)) {
+                    shouldReceive = false;
                     Log.d("ScanCodeActivity", "Read new qr code.");
                     lastReceived = nowReceived;
                     playBeep(100);

@@ -49,8 +49,8 @@ does Device A have and what does Device B have). When it's done, it returns a li
 """
 
 
-def get_i_want_list(i_have_list):
-    list_of_extensions = sync.compare_files(cbor.loads(i_have_list))
+def get_i_want_list(i_have_list, path='udpDir/'):
+    list_of_extensions = sync.compare_files(cbor.loads(i_have_list), path)
     return cbor.dumps(list_of_extensions), list_of_extensions
 
 
@@ -78,8 +78,8 @@ def get_event_list(i_want_list, path='udpDir/'):
 
     return cbor.dumps(event_list)
 
-def sync_extensions(compared_files, extensions_files):
-    sync.sync_extensions(compared_files, extensions_files)
+def sync_extensions(compared_files, extensions_files, path='udpDir/'):
+    sync.sync_extensions(compared_files, extensions_files, path)
 
 def get_bytes_from_tojava_pyobject(b):
     return bytes(b)
