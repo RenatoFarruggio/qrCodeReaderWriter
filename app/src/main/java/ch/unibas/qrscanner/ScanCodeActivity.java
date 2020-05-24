@@ -160,7 +160,9 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
                 // Set new QR code. Need to read a qr code to make this change effective.
                 synchronized (shouldUpdateQRMonitor) {
-                    setToQR = PyObject2ByteArray(transport.callAttr("get_event_list", i_want_list_py, path));
+                    byte[] toQRView = PyObject2ByteArray(transport.callAttr("get_event_list", i_want_list_py, path));
+                    setToQR = toQRView;
+                    Log.d("ScanCodeActivity", "Set QR code to byte[] of length: " + toQRView.length);
                     shouldUpdateQR = true;
                 }
 
@@ -199,6 +201,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
                 // Set new QR code. Need to read a qr code to make this change effective.
                 synchronized (shouldUpdateQRMonitor) {
                     setToQR = i_want_list;
+                    Log.d("ScanCodeActivity", "Set QR code to byte[] of length: " + i_want_list.length);
                     shouldUpdateQR = true;
                 }
 
