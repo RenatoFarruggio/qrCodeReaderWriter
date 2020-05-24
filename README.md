@@ -97,4 +97,5 @@ All meeting notes are located in [the diary](https://github.com/cn-uofbasel/BACn
 * Write specifications for integration for group 10 KotlinUI
 * Add 2 input variables for ScanCodeActivity. One for Path (by calling getApplicationContext().getFilesDir().getPath()), One for Device ('A' or 'B')
 * Get logSync to run successfully
+* (Fix audio errors)
 * (Figure out where "[ZeroHung]zrhung_get_config: Get config failed for wp[0x0008]" error is coming from)
