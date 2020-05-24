@@ -57,7 +57,7 @@ Code on python side should look like this:
          ... # Main loop
 ```
 ## Compatibility
-Packet format compatible with log requirements [here](https://github.com/cn-uofbasel/BACnet/blob/master/doc/BACnet-event-structure.md)
+Packet format compatible with log requirements [here](https://github.com/cn-uofbasel/BACnet/blob/master/doc/BACnet-event-structure.md). But we can send any bytes that standard UDP packets can send. We have, however, adapted our code to fit the transport interface
 
 ## Diary
 All meeting notes are located in the diary, [here](https://github.com/cn-uofbasel/BACnet/blob/master/groups/02-soundLink/Tagebuch.md).
@@ -77,15 +77,17 @@ All meeting notes are located in the diary, [here](https://github.com/cn-uofbase
 * ~~Find out how many bps we can send (around 500bytes/packet, maybe up to 2k) should be fine !~~
 * ~~Add [Chaquopy](https://chaquo.com/chaquopy/) to our project to run python files~~
 * ~~Fix __fatal__ bug: Chaquopy can't import python library "cbor2" (Fix by downgrading to cbor)~~
-* __Encode and Decode qr code in base64 encoding__ (Does not work with our current setup afaik)
+* ~~__Encode and Decode qr code in base64 encoding__ (Does not work with our current setup afaik)~~
 * ~~If Chaquopy works as exspected, add it to the documentation over on [BACnet](https://github.com/cn-uofbasel/BACnet/tree/master/groups/02-soundLink)~~
 * ~~Merge readme from [BACnet](https://github.com/cn-uofbasel/BACnet/tree/master/groups/02-soundLink) into this readme.~~
 * ~~Figure out how to use the [eventCreationTool](https://github.com/cn-uofbasel/BACnet/tree/master/groups/04-logMerge/eventCreationTool) on our android app, according to [this](https://chaquo.com/chaquopy/doc/current/java.html)~~
 * ~~Make a license file (preferably the same, BACnet uses)~~
 * ~~Get a [license for Chaquopy](https://chaquo.com/chaquopy/license/?app=ch.unibas.qrscanner)~~
-* Remote add this repo to BACnet and pull.
 * ~~Specify Interface with group 12 (syncLog). In the ideal case, we can import their code like the eventCreationTool above.~~
 * ~~__Import logSync__~~
 * ~~Interface testing: Can we import logSync?~~
-* Interface testing: Do callbacks work from python back to java?
+* ~~Interface testing: Do callbacks work from python back to java?~~
+* Remote add this repo to BACnet and pull.
+* Implement packet splitting
+* Implement advanced transport protocol
 * Get logSync to run successfully
