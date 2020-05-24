@@ -144,64 +144,21 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
                 //// Step 1: Send i_have_list to B ////
 
-                // Send packet as subpackets
-                int numSubPackets = (i_have_list.length / (PACKETSIZE-1)) + 1;
-                Log.d("ScanCodeActivity", "numSubPackets: " + numSubPackets);
-                for (int i = 0; i < numSubPackets; i++) {
-
-                    boolean last = false;
-                    if (i == numSubPackets-1) {
-                        last = true;
-                    }
-
-                    // Create subPacket of i_have_list
-                    output = new byte[PACKETSIZE];
-                    if (!last) {
-                        System.arraycopy(i_have_list, i * (PACKETSIZE-1), output=new byte[PACKETSIZE], 1, PACKETSIZE - 1);
-                        output[0] = (byte)0;
-                    } else {
-                        System.arraycopy(i_have_list, i * (PACKETSIZE-1), output=new byte[i_have_list.length % (PACKETSIZE - 1)+1], 1, i_have_list.length % (PACKETSIZE - 1));
-                        output[0] = (byte)1;
-                    }
-                    Log.d("ScanCodeActivity", "i_have_list (" + (i+1) + "/" + numSubPackets + "): " + Arrays.toString(output));
-
-                    // Set output
-                    //Log.d("ScanCodeActivity", "output: " + Arrays.toString(output));
-                    setToQR = output;
-                    synchronized (shouldUpdateQRMonitor) {
-                        shouldUpdateQR = true;
-                    }
-
-                    Log.d("ScanCodeActivity", "Wait for receiving...");
-                    synchronized (shouldReceiveMonitor) {
-                        shouldReceive = true;
-                        try {
-                            shouldReceiveMonitor.wait();
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                    Log.d("ScanCodeActivity", "Received a packet.");
-
-                }
-
+                // Send i_have_list as subpackets
+                sendPacketAsSubPackets(i_have_list);
 
                 //// Step 2: Receive i_want_list from B ////
-                synchronized (shouldReceiveMonitor) {
-
-                }
+                receivePacketAsSubPackets();
 
                 // Handle i_want_list
                 PyObject i_want_list_py;
                 synchronized (shouldReceiveMonitor) {
-                    byte[] i_want_list = lastReceived;
+                    byte[] i_want_list = wholeInput;
                     i_want_list_py = byteArray2PyObject(i_want_list);
                 }
 
                 //// Step 3: Send event_list to B ////
-                synchronized (shouldReceiveMonitor) {
 
-                }
                 // Set new QR code. Need to read a qr code to make this change effective.
                 synchronized (shouldUpdateQRMonitor) {
                     byte[] toQRView = PyObject2ByteArray(transport.callAttr("get_event_list", i_want_list_py, path));
@@ -217,47 +174,20 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
             } else if (MainActivity.getDevice() == 'B') {
 
                 //// Step 1: Receive i_have_list from A ////
-                synchronized (shouldReceiveMonitor) {
-                    while (true) {
-                        // Start accepting QR codes
-                        shouldReceive = true;
-
-                        // Wait for scanner to get a packet (i_have_list).
-                        try {
-                            shouldReceiveMonitor.wait();
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-
-                        // Concatenate lastReceived into wholeInput
-                        Log.d("ScanCodeActivity", "new lastReceived: " + Arrays.toString(lastReceived));
-                        Log.d("ScanCodeActivity", "wholeInput before concat: " + Arrays.toString(wholeInput));
-                        wholeInput = Arrays.copyOf(wholeInput, wholeInput.length + lastReceived.length-1);
-                        System.arraycopy(lastReceived, 1, wholeInput, wholeInput.length - (lastReceived.length-1), lastReceived.length-1);
-                        Log.d("ScanCodeActivity", "wholeInput after concat: " + Arrays.toString(wholeInput));
-
-                        // if 'last' flag is 1
-                        if (lastReceived[0] != 0) {
-                            Log.d("ScanCodeActivity", "Whole i_want_list received.");
-                            break;
-                        }
-
-
-
-                    }
-                }
+                receivePacketAsSubPackets();
 
                 // Process i_have_list
                 byte[] i_want_list;
                 PyObject extension_list_py;
                 synchronized (shouldReceiveMonitor) {
-                    if (lastReceived==null) throw new AssertionError("lastReceived must not be null!");
+                    if (wholeInput==null) throw new AssertionError("lastReceived must not be null!");
                     byte[] i_have_list = wholeInput;
                     PyObject i_have_list_py = byteArray2PyObject(i_have_list);
                     PyObject i_want_list_and_extension_list = transport.callAttr("get_i_want_list", i_have_list_py, path);
                     PyObject i_want_list_py = i_want_list_and_extension_list.asList().get(0);
                     i_want_list = PyObject2ByteArray(i_want_list_py);
                     extension_list_py = i_want_list_and_extension_list.asList().get(1);
+                    wholeInput = new byte[0];
                 }
 
                 //// Step 2: Send i_want_list to A ////
@@ -445,6 +375,80 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
             return -1;
         }
         return 0;
+    }
+
+    private void sendPacketAsSubPackets(byte[] arrayToSend) {
+        int numSubPackets = (arrayToSend.length / (PACKETSIZE-1)) + 1;
+        Log.d("ScanCodeActivity", "numSubPackets: " + numSubPackets);
+        for (int i = 0; i < numSubPackets; i++) {
+
+            boolean last = false;
+            if (i == numSubPackets-1) {
+                last = true;
+            }
+
+            // Create subPacket of i_have_list
+            output = new byte[PACKETSIZE];
+
+            if (!last) {
+                System.arraycopy(arrayToSend, i * (PACKETSIZE-1), output=new byte[PACKETSIZE], 1, PACKETSIZE - 1);
+                output[0] = (byte)0;
+            } else {
+                System.arraycopy(arrayToSend, i * (PACKETSIZE-1), output=new byte[arrayToSend.length % (PACKETSIZE - 1)+1], 1, arrayToSend.length % (PACKETSIZE - 1));
+                output[0] = (byte)1;
+            }
+            Log.d("ScanCodeActivity", "i_have_list (" + (i+1) + "/" + numSubPackets + "): " + Arrays.toString(output));
+
+            // Set output
+            //Log.d("ScanCodeActivity", "output: " + Arrays.toString(output));
+            setToQR = output;
+            synchronized (shouldUpdateQRMonitor) {
+                shouldUpdateQR = true;
+            }
+
+            Log.d("ScanCodeActivity", "Wait for receiving...");
+            synchronized (shouldReceiveMonitor) {
+                shouldReceive = true;
+                try {
+                    shouldReceiveMonitor.wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            Log.d("ScanCodeActivity", "Received a packet.");
+        }
+    }
+
+    /**
+     * Once finished, the received packet is saved in wholeInput.
+     */
+    private void receivePacketAsSubPackets() {
+        synchronized (shouldReceiveMonitor) {
+            while (true) {
+                // Start accepting QR codes
+                shouldReceive = true;
+
+                // Wait for scanner to get a packet (i_have_list).
+                try {
+                    shouldReceiveMonitor.wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                // Concatenate lastReceived into wholeInput
+                Log.d("ScanCodeActivity", "new lastReceived: " + Arrays.toString(lastReceived));
+                Log.d("ScanCodeActivity", "wholeInput before concat: " + Arrays.toString(wholeInput));
+                wholeInput = Arrays.copyOf(wholeInput, wholeInput.length + lastReceived.length-1);
+                System.arraycopy(lastReceived, 1, wholeInput, wholeInput.length - (lastReceived.length-1), lastReceived.length-1);
+                Log.d("ScanCodeActivity", "wholeInput after concat: " + Arrays.toString(wholeInput));
+
+                // if 'last' flag is 1 break
+                if (lastReceived[0] != 0) {
+                    Log.d("ScanCodeActivity", "Whole i_want_list received.");
+                    break;
+                }
+            }
+        }
     }
 
     private void playBeep(int playLengthInMilliseconds, int pauseLengthInMilliseconds) {
