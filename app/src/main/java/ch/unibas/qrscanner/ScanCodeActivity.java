@@ -57,6 +57,8 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
     String path;
 
+    private static final byte[] EMPTYMESSAGE = new byte[] {-128, 127, -128, 127, -128, 127, -128, 127, -128, 127, -128, 127, -128};;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -310,6 +312,10 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
             Log.d("ScanCodeActivity", "shouldReceive: " + shouldReceive);
             if (shouldReceive) {
                 byte[] nowReceived = Base64.decode(result.getText(), Base64.DEFAULT);
+                if (Arrays.equals(nowReceived, EMPTYMESSAGE)) {
+                    nowReceived = new byte[]{-128};
+                    Log.d("ScanCodeActivity", "Received empty message.");
+                }
                 Log.d("ScanCodeActivity", "nowReceived: " + Arrays.toString(nowReceived));
                 if (!Arrays.equals(nowReceived, lastReceived)) {
                     shouldReceive = false;
@@ -346,14 +352,15 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         return transport.callAttr("get_bytes_from_tojava_pyobject", PyObject.fromJava(array));
     }
 
-
     private int setBase64ToPopupImageView(byte[] binaryData) {
         MultiFormatWriter multiFormatWriter = new MultiFormatWriter();
+        if (binaryData.length == 0) {
+            binaryData = EMPTYMESSAGE;
+        }
         try {
             String base64Text = Base64.encodeToString(binaryData, Base64.DEFAULT);
             Log.d("ScanCodeActivity", "base64Text: " + base64Text);
             Log.d("ScanCodeActivity", "base64Text length: " + base64Text.length());
-            // TODO: ENABLE SENDING EMPTY PACKETS
             BitMatrix bitMatrix = multiFormatWriter.encode(base64Text, BarcodeFormat.QR_CODE, qrSize, qrSize);
             BarcodeEncoder barcodeEncoder = new BarcodeEncoder();
             Bitmap bitmap = barcodeEncoder.createBitmap(bitMatrix);
