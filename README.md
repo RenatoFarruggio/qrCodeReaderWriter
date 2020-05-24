@@ -57,7 +57,7 @@ Code on python side should look like this:
          ... # Main loop
 ```
 ## Compatibility
-Packet format compatible with [BACnet log requirements](https://github.com/cn-uofbasel/BACnet/blob/master/doc/BACnet-event-structure.md). But we can send any bytes that standard UDP packets can send. We have, however, adapted our code to fit the transport interface of logSync.
+Packet format compatible with [BACnet log requirements](https://github.com/cn-uofbasel/BACnet/blob/master/doc/BACnet-event-structure.md). But we can send any bytes that standard UDP packets can send. We have adapted our code to the transport interface of logSync.
 
 ## Diary
 All meeting notes are located in [the diary](https://github.com/cn-uofbasel/BACnet/blob/master/groups/02-soundLink/Tagebuch.md).
