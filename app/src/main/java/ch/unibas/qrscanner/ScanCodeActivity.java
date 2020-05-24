@@ -326,6 +326,16 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
             }
         }
 
+
+        // Update QR code if needed
+        synchronized (shouldUpdateQRMonitor) {
+            if (shouldUpdateQR) {
+                shouldUpdateQR = false;
+                setBase64ToPopupImageView(setToQR);
+                setToQR = null;
+            }
+        }
+
         onPause();
         onResume();
     }
