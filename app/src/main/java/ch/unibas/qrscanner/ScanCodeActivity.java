@@ -7,7 +7,6 @@ import android.graphics.Bitmap;
 import android.media.AudioManager;
 import android.media.ToneGenerator;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.util.Base64;
 import android.util.Log;
 import android.view.Window;
@@ -40,7 +39,6 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
     Python py;
     PyObject transport;
-    PyObject sync;
     String dirName;
 
     int cameraID;
@@ -96,8 +94,13 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         //setTextToPopupImageView(getStringOfByteSize(200, initialCode));
         //setTextToPopupImageView("0");
 
+        init();
+    }
+
+    private void init() {
         // Initialize Python
         initializePython();
+        Log.d("ScanCodeActivity", "Python initialized.");
 
         // Setup Path
         initializePath();
@@ -112,24 +115,12 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
     }
 
     /**
-     * Synchronizes Database from Device A to device B.
+     * Synchronizes Database from device A to device B.
      */
     class SynchronizerThread extends Thread {
 
-
-        public void run1() {
-           while (true) {
-               try {
-                   Log.d("ScanCodeActivity", "THIS IS A MESSAGE");
-                   Thread.sleep(1000);
-               } catch (InterruptedException e) {
-                   e.printStackTrace();
-               }
-           }
-        }
-
+        @Override
         public void run() {
-            // Synchronize
             if (MainActivity.getDevice() == 'A') {
                 // Get i_have_list
                 PyObject i_have_list_py = transport.callAttr("get_i_have_list", path);
@@ -150,22 +141,15 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
                     shouldReceive = true;
                 }
 
-                // WAIT for receiving //
-
                 Log.d("ScanCodeActivity", "Wait for receiving...");
-
                 synchronized (shouldReceiveMonitor) {
                     try {
-                        Log.d("ScanCodeActivity", "Before");
                         shouldReceiveMonitor.wait();
-                        Log.d("ScanCodeActivity", "After");
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                 }
-
-                Log.d("ScanCodeActivity", "I've waited.");
-
+                Log.d("ScanCodeActivity", "Received a packet.");
 
                 // Handle input from Device B
                 PyObject i_want_list_py;
@@ -174,15 +158,17 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
                     i_want_list_py = byteArray2PyObject(i_want_list);
                 }
 
+                // Set new QR code. Need to read a qr code to make this change effective.
                 synchronized (shouldUpdateQRMonitor) {
-                    shouldUpdateQR = true;
                     setToQR = PyObject2ByteArray(transport.callAttr("get_event_list", i_want_list_py, path));
+                    shouldUpdateQR = true;
                 }
 
-                Log.i("ScanCodeActivity", "Synchronization complete. Please wait for Device B!");
+                Log.i("ScanCodeActivity", "Synchronization complete. Please wait for Device B to finish!");
+
+
 
             } else if (MainActivity.getDevice() == 'B') {
-
                 // Start accepting QR codes
                 synchronized (shouldReceiveMonitor) {
                     shouldReceive = true;
@@ -197,7 +183,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
                     }
                 }
 
-
+                // Process read QR code
                 byte[] i_want_list;
                 PyObject extension_list_py;
                 synchronized (shouldReceiveMonitor) {
@@ -210,6 +196,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
                     extension_list_py = i_want_list_and_extension_list.asList().get(1);
                 }
 
+                // Set new QR code. Need to read a qr code to make this change effective.
                 synchronized (shouldUpdateQRMonitor) {
                     setToQR = i_want_list;
                     shouldUpdateQR = true;
@@ -232,8 +219,9 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
                 }
 
 
-                Log.i("ScanCodeActivity", "Synchronization complete.");
-
+                Log.i("ScanCodeActivity", "Synchronization complete. You may exit both Apps now.");
+            } else {
+                throw new IllegalArgumentException("Device should be 'A' or 'B'.");
             }
 
         }
@@ -242,7 +230,6 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
 
     private void initializePython() {
-
         // Start Python
         if (! Python.isStarted()) {
             Python.start(new AndroidPlatform(this));
@@ -250,14 +237,13 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
         // Get python instance
         py = Python.getInstance();
-        Log.d("ScanCodeActivity", "Python is: " + py);
-
+        Log.d("ScanCodeActivity", "py is: " + py);
 
         // Python equivalent to
         //  "import transport"
         transport = py.getModule("transport");
         Log.d("ScanCodeActivity", "transport is: " + transport);
-        Log.d("ScanCodeActivity", "transport KEYSET: " + transport.keySet());
+        //Log.d("ScanCodeActivity", "transport KEYSET: " + transport.keySet());
         // transport KEYSET:
         // [__builtins__, __cached__, __doc__, __file__, __loader__, __name__, __package__,
         // __spec__, cbor, get_event_list, get_i_have_list, get_i_want_list, pcap, sync]
@@ -306,23 +292,12 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
     @Override
     public void handleResult(Result result) {
-        //onPause();
+        Log.d("ScanCodeActivity", "QR code detected.");
 
-
-        Log.d("ScanCodeActivity", "FOUND RESULT!");
-
-        playBeep(100);
         //MainActivity.resultTextView.setText(result.getText());
 
 
-
-        // Actually handle the result //
-        //String outText = handleResultByCounting(result.getText());
-        //String outText = handleResultByCountingInLargePackets(result.getText());
-        //String outText = handleResultByCountingInDatabase(result.getText());
-        //String outText = handleResultBySyncingLog(result.getText());
-
-
+        // Update QR code if needed
         synchronized (shouldUpdateQRMonitor) {
             if (shouldUpdateQR) {
                 shouldUpdateQR = false;
@@ -331,62 +306,21 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
             }
         }
 
+        // Handle QR code result
         synchronized (shouldReceiveMonitor) {
             if (shouldReceive) {
                 shouldReceive = false;
                 byte[] nowReceived = Base64.decode(result.getText(), Base64.DEFAULT);
                 if (!Arrays.equals(nowReceived, lastReceived)) {
+                    Log.d("ScanCodeActivity", "Read new qr code.");
                     lastReceived = nowReceived;
                     playBeep(100);
                     shouldReceiveMonitor.notifyAll();
+                } else {
+                    Log.d("ScanCodeActivity", "Read same qr code as before.");
                 }
             }
         }
-
-        /*try {
-            semaphore.acquire();
-            try {
-                Log.d("ScanCodeActivity", "shouldReceive: " + shouldReceive);
-                if (shouldReceive) {
-                    shouldReceive = false;
-                    lastReceived = Base64.decode(result.getText(), Base64.DEFAULT);
-                    playBeep(100);
-                }
-                synchronized (shouldUpdateQRMonitor) {
-                    if (shouldUpdateQR) {
-                        shouldUpdateQR = false;
-                        setBase64ToPopupImageView(setToQR);
-                        setToQR = null;
-                    }
-                }
-            } finally {
-                synchronized (shouldReceiveMonitor) {
-                    shouldReceiveMonitor.notifyAll();
-                    semaphore.release();
-                }
-            }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }*/
-
-
-
-        /*synchronized (shouldReceiveMonitor) {
-            if (shouldReceive) {
-                shouldReceive = false;
-                lastReceived = Base64.decode(result.getText(), Base64.DEFAULT);
-                //lastReceived = Base64.decode(result.getRawBytes(), Base64.DEFAULT);
-                playBeep(100);
-                shouldReceiveMonitor.notify();
-            }
-        }*/
-
-
-
-
-        // Write text into QR code
-        //setTextToPopupImageView(outText);
-        //setBase64ToPopupImageView(outData);
 
         onPause();
         onResume();
@@ -421,12 +355,20 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
     private void playBeep(int playLengthInMilliseconds, int pauseLengthInMilliseconds) {
         playBeep(playLengthInMilliseconds);
-        SystemClock.sleep(pauseLengthInMilliseconds);
+        try {
+            Thread.sleep(pauseLengthInMilliseconds);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     private void playBeep(int playLengthInMilliseconds) {
         toneGenerator.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD);
-        SystemClock.sleep(playLengthInMilliseconds);
+        try {
+            Thread.sleep(playLengthInMilliseconds);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         toneGenerator.stopTone();
     }
 
@@ -444,25 +386,6 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         scannerView.setResultHandler(this);
         scannerView.startCamera(cameraID);
     }
-
-    protected void switchCamera() {
-        onPause();
-        cameraID = (cameraID+1)%2;
-        onResume();
-    }
-
-    protected void switchCameraToFrontcam() {
-        onPause();
-        cameraID = 1;
-        onResume();
-    }
-
-    protected void switchCameraToBackcam() {
-        onPause();
-        cameraID = 0;
-        onResume();
-    }
-
     /*
     // CALLBACKS
     public byte[] rd_callback() { // called when logSync wants to receive
@@ -584,6 +507,24 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
             e.printStackTrace();
         }
     }
-    ///////////////////////////////////////////////////////
 
+    protected void switchCamera() {
+        onPause();
+        cameraID = (cameraID+1)%2;
+        onResume();
+    }
+
+    protected void switchCameraToFrontcam() {
+        onPause();
+        cameraID = 1;
+        onResume();
+    }
+
+    protected void switchCameraToBackcam() {
+        onPause();
+        cameraID = 0;
+        onResume();
+    }
+
+    ///////////////////////////////////////////////////////
 }
