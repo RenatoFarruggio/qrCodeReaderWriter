@@ -205,7 +205,13 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
                     shouldUpdateQR = true;
                 }
 
-                // Wait for scanner to get a packet.
+                // Start accepting QR codes
+                synchronized (shouldReceiveMonitor) {
+                    shouldReceive = true;
+                    Log.d("ScanCodeActivity", "shouldReceive set to " + shouldReceive);
+                }
+
+                // Wait for scanner to get a packet (event_list).
                 synchronized (shouldReceiveMonitor) {
                     try {
                         shouldReceiveMonitor.wait();
