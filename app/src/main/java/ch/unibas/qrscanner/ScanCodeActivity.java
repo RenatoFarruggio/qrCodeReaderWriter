@@ -354,6 +354,10 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
                     Log.d("ScanCodeActivity", "Read same qr code as before.");
                 }
 
+                // FIXME: Where do I have to be?
+                if (lastReceived == output) {
+                    shouldReceiveMonitor.notifyAll();
+                }
             }
         }
 
