@@ -3,6 +3,7 @@ package ch.unibas.qrscanner;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.Dialog;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.media.AudioManager;
 import android.media.ToneGenerator;
@@ -57,10 +58,11 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
     volatile private byte[] lastReceived;
     volatile private byte[] wholeInput;
 
+    private char device;
 
     private String path;
 
-    private static final int PACKETSIZE = 12; //96;
+    private int PACKETSIZE;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,7 +71,14 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         scannerView = new ZXingScannerView(this);
         setContentView(scannerView);
 
-        Log.d("ScanCodeActivity", "Started as device " + MainActivity.getDevice());
+        Intent intent = getIntent();
+        this.path = intent.getStringExtra("path");
+        this.device = intent.getCharExtra("device", 'Z');
+        this.PACKETSIZE = intent.getIntExtra("packetsize", 12);
+
+
+        Log.d("ScanCodeActivity", "Started as device " + device);
+        Log.d("ScanCodeActivity", "Set path to " + path);
 
         toneGenerator = new ToneGenerator(AudioManager.STREAM_ALARM, 40);
 
@@ -127,7 +136,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         public void run() {
             output = new byte[PACKETSIZE];
             input = new byte[PACKETSIZE];
-            if (MainActivity.getDevice() == 'A') {
+            if (device == 'A') {
                 // Get i_have_list
                 PyObject i_have_list_py = transport.callAttr("get_i_have_list", path);
                 Log.d("ScanCodeActivity", "i_have_list: " + i_have_list_py);
@@ -160,7 +169,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
 
 
-            } else if (MainActivity.getDevice() == 'B') {
+            } else if (device == 'B') {
 
                 //// Step 1: Receive i_have_list from A ////
                 receivePacketAsSubPackets();
@@ -232,11 +241,11 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
     }
 
 
-    private int initializePath() {
-        // TODO: implement absolutePathname String parameter
+    private void initializePath() {
+        // TODO: Set appropriate path.
 
         // Create '/databases' directory in ch.unibas.qrscanner.files
-        path = getApplicationContext().getFilesDir().getPath();
+        //path = getApplicationContext().getFilesDir().getPath();
         if (!path.substring(path.lastIndexOf("/")+1).equals("files")) {
             path += "/files";
         }
@@ -248,20 +257,23 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
             Log.d("ScanCodeActivity", "Created Path: " + path);
         f.mkdirs();
 
+        /*
+        File f = new File(path);
+        if (!f.exists()) {
+            f.mkdirs();
+            Log.d("ScanCodeActivity", "Created new directory: " + path);
+        }
+         */
+
         File[] files = f.listFiles();
         for (File inFile : files) {
             Log.d("ScanCodeActivity", "File in path: " + inFile);
         }
-
-
-        if (false) // if error
-            return -1;
-        return 0;
     }
 
 
     private void initializeQRCode() {
-        if (MainActivity.getDevice() == 'A') {
+        if (device == 'A') {
             // Get i_have_list
             PyObject i_have_list_py = transport.callAttr("get_i_have_list", path);
             //Log.d("ScanCodeActivity", "i_have_list: " + i_have_list_py);
@@ -530,6 +542,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         return text;
     }
 
+    /*
 
     private String handleResultByCounting(String text) {
         int num = Integer.parseInt(text);
@@ -626,6 +639,8 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         cameraID = 0;
         onResume();
     }
+
+     */
 
     ///////////////////////////////////////////////////////
 }
