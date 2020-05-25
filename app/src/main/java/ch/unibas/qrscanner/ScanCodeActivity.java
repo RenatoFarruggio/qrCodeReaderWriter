@@ -361,6 +361,16 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
             }
         }
 
+
+        try {
+            if (!qrPopupDialog.isShowing()) {
+                qrPopupDialog.show();
+            }
+        } catch (Exception e) {
+            Log.e("ScanCodeActivity (handleResult)", "Seems like there was an error when trying to show qr popup dialog.");
+            e.printStackTrace();
+        }
+
         onPause();
         onResume();
     }
