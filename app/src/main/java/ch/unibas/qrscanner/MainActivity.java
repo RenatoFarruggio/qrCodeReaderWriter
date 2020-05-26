@@ -30,7 +30,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         String environmentPath = android.os.Environment.getDataDirectory().getAbsolutePath();
-        final String pathToChaquoPythonFiles = environmentPath + "/user/0/com.chaquo.python.console/files";
+        final String pathToChaquoPythonFiles = environmentPath + "/data/com.chaquo.python.console/files";
 
         //Log.d("MainActivity", "Absolute path until now: " + getApplicationContext().getFilesDir().getPath());
         //Log.d("MainActivity", "Absolute path for chaquo: " + pathToChaquoPythonFiles);

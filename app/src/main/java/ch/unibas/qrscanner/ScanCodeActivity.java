@@ -107,7 +107,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         wholeInput = new byte[0];
          */
 
-        dirName = "/databases/udpDir/";
+        dirName = "/";
 
         init();
     }
@@ -239,9 +239,9 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
         // Python equivalent to
         //  "import transport"
-        transport = py.getModule("transport");
+        transport = py.getModule("logSync.database_transport");
         Log.d("ScanCodeActivity", "transport is: " + transport);
-        //Log.d("ScanCodeActivity", "transport KEYSET: " + transport.keySet());
+        Log.d("ScanCodeActivity", "transport KEYSET: " + transport.keySet());
         // transport KEYSET:
         // [__builtins__, __cached__, __doc__, __file__, __loader__, __name__, __package__,
         // __spec__, cbor, get_event_list, get_i_have_list, get_i_want_list, pcap, sync]
@@ -252,7 +252,6 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         // TODO: Set appropriate path:
         // data/data/com.chaquo.python.console/files
 
-        // Create '/databases' directory in ch.unibas.qrscanner.files
         //path = getApplicationContext().getFilesDir().getPath();
         if (!path.substring(path.lastIndexOf("/")+1).equals("files")) {
             path += "/files";
@@ -277,33 +276,6 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         File[] files = f.listFiles();
         for (File inFile : files) {
             Log.d("ScanCodeActivity", "File in path: " + inFile);
-        }
-    }
-
-
-    private void initializeQRCodeOLD() {
-        if (device == 'A') {
-            // Get i_have_list
-            PyObject i_have_list_py = transport.callAttr("get_i_have_list", path);
-            //Log.d("ScanCodeActivity", "i_have_list: " + i_have_list_py);
-
-            // Convert PyObject to byte[]
-            byte[] i_have_list = pyObject2ByteArray(i_have_list_py);
-
-            // Extract subPacket
-            boolean last = (i_have_list.length < PACKETSIZE);
-            byte[] output = new byte[PACKETSIZE];
-            if (last) {
-                output = new byte[i_have_list.length+1];
-            }
-            System.arraycopy(i_have_list, 0, output, 1, Math.min(PACKETSIZE-1, i_have_list.length));
-            output[0] = (byte)(last ? 1 : 0);
-            Log.d("ScanCodeActivity (initializeQRCode)", "Set initial QR code for device A.");
-            Log.d("ScanCodeActivity (initializeQRCode)", "Initial QR output: " + Arrays.toString(output));
-            Log.d("ScanCodeActivity (initializeQRCode)", "Initial QR output length: " + output.length);
-
-            // Set initial code
-            setByteArrayToPopupImageView(output);
         }
     }
 
@@ -451,7 +423,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
                         Log.d("ScanCodeActivity (handleResult): ", "event_list received: " + Arrays.toString(inputPacket));
                         event_list = inputPacket;
                         sync_extensions(event_list);
-                        toneGenerator.startTone(AudioManager.STREAM_ALARM, 1500);
+                        toneGenerator.startTone(AudioManager.STREAM_ALARM, 2000);
                         onBackPressed();
                     }
                     break;
@@ -499,7 +471,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
     }
 
     private byte[] get_i_have_list() {
-        PyObject i_have_list_py = transport.callAttr("get_i_have_list", path);
+        PyObject i_have_list_py = transport.call("get_i_have_list");
         Log.d("ScanCodeActivity", "i_have_list: " + i_have_list_py);
 
         byte[] i_have_list_out = pyObject2ByteArray(i_have_list_py);

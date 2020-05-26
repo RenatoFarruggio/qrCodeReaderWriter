@@ -29,6 +29,7 @@ android {
                 pip {
                     install "cbor"
                     install "pynacl"
+                    install "sqlalchemy"
                 }
             }
         } else {
@@ -38,6 +39,7 @@ android {
                 pip {
                     install "cbor"
                     install "pynacl"
+                    install "sqlalchemy"
                 }
             }
         }
