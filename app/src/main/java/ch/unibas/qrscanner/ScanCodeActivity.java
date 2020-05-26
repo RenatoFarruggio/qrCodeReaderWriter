@@ -44,6 +44,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
     int cameraID;
 
+    /*
     int lastNum = 0;
 
     byte[] output;
@@ -58,6 +59,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
     volatile private boolean SEND;
     volatile private byte[] lastReceived;
     volatile private byte[] wholeInput;
+     */
 
     private char device;
 
@@ -93,6 +95,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
         qrSize = getResources().getDisplayMetrics().widthPixels;
 
+        /*
         synchronized (shouldReceiveMonitor) {
             shouldReceive = false;
         }
@@ -101,8 +104,10 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
             shouldUpdateQR = false;
         }
 
-        dirName = "/databases/udpDir/";
         wholeInput = new byte[0];
+         */
+
+        dirName = "/databases/udpDir/";
 
         init();
     }
@@ -308,6 +313,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
             // Get i_have_list
             i_have_list = get_i_have_list();
             outputPacket = i_have_list;
+            Log.d("ScanCodeActivity (initializeQRCode)", "i_have_list to send: " + Arrays.toString(i_have_list));
 
             numSubpackets = getNumSubpackets(i_have_list);
             arrayInQR = getSubpacket(i_have_list, 0);
@@ -337,11 +343,12 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         onPause();
         // Verify that QR code is new.
         if (Arrays.equals(inputSubpacket, decodeResult(result))) {
-            Log.d("ScanCodeActivity (handleResult)", "Already received this packet: " + Arrays.toString(decodeResult(result)));
+            Log.d("ScanCodeActivity (handleResult)", "Already received this packet: " + Arrays.toString(inputPacket));
             toneGenerator.startTone(AudioManager.STREAM_NOTIFICATION, 50);
             onResume();
             return;
         }
+
         toneGenerator.startTone(AudioManager.STREAM_ALARM, 50);
         inputSubpacket = decodeResult(result);
 
@@ -356,13 +363,12 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
 
                     outputSubpacket = getSubpacket(outputPacket, i);
-                    setToQR = outputSubpacket;
-                    setByteArrayToPopupImageView(setToQR);
+                    setByteArrayToPopupImageView(outputSubpacket);
 
                     Log.d("ScanCodeActivity (handleResult)", "Create i_have_list-packet to send (" + (i+1) + "/" + numSubpackets + "): " + Arrays.toString(outputSubpacket));
 
                     i++;
-                    if (i >= numSubpackets+1) {
+                    if (i >= numSubpackets) {
                         step++;
                         i = 0;
                         inputPacket = new byte[0];
@@ -375,15 +381,15 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
                     inputPacket = arraySmartConcat(inputPacket, inputSubpacket);
 
                     if (!last) {
-                        setToQR = inputSubpacket;
-                        setByteArrayToPopupImageView(setToQR);
+                        setByteArrayToPopupImageView(inputSubpacket);
                     } else {  // last i_want_list-packet received
+                        Log.d("ScanCodeActivity (handleResult)", "i_want_list received: " + Arrays.toString(inputPacket));
                         event_list = get_event_list(inputPacket);
+                        Log.d("ScanCodeActivity (handleResult)", "event_list to send: " + Arrays.toString(event_list));
                         outputPacket = event_list;
                         numSubpackets = getNumSubpackets(outputPacket);
                         outputSubpacket = getSubpacket(outputPacket, 0);
-                        setToQR = outputSubpacket;
-                        setByteArrayToPopupImageView(setToQR);
+                        setByteArrayToPopupImageView(outputSubpacket);
                         i = 1;
                         step++;
                     }
@@ -392,11 +398,10 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
                 case 3:  // Send event_list to B
                     // TODO: implement this
                     outputSubpacket = getSubpacket(event_list, i);
-                    setToQR = outputSubpacket;
-                    setByteArrayToPopupImageView(setToQR);
+                    setByteArrayToPopupImageView(outputSubpacket);
 
                     i++;
-                    if (i >= numSubpackets+1) {
+                    if (i >= numSubpackets) {
                         step++;
                         i = 0;
                         inputPacket = new byte[0];
@@ -410,17 +415,16 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
                     inputPacket = arraySmartConcat(inputPacket, inputSubpacket);
 
                     if (!last) {
-                        setToQR = inputSubpacket;
-                        setByteArrayToPopupImageView(setToQR);
+                        setByteArrayToPopupImageView(inputSubpacket);
                     } else {  // last i_have_list subpacket received
 
-
+                        Log.d("ScanCodeActivity (handleResult)", "i_have_list received: " + Arrays.toString(inputPacket));
                         i_want_list = get_i_want_list(inputPacket);
                         outputPacket = i_want_list;
+                        Log.d("ScanCodeActivity (handleResult)", "i_want_list to send: " + Arrays.toString(outputPacket));
                         numSubpackets = getNumSubpackets(outputPacket);
                         outputSubpacket = getSubpacket(outputPacket, 0);
-                        setToQR = outputSubpacket;
-                        setByteArrayToPopupImageView(setToQR);
+                        setByteArrayToPopupImageView(outputSubpacket);
                         i = 1;
 
                         step++;
@@ -428,11 +432,10 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
                     break;
                 case 2:  // Send i_want_list to A
                     outputSubpacket = getSubpacket(i_want_list, i);
-                    setToQR = outputSubpacket;
-                    setByteArrayToPopupImageView(setToQR);
+                    setByteArrayToPopupImageView(outputSubpacket);
 
                     i++;
-                    if (i >= numSubpackets+1) {
+                    if (i >= numSubpackets) {
                         step++;
                         i = 0;
                         inputPacket = new byte[0];
@@ -442,13 +445,14 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
                     inputPacket = arraySmartConcat(inputPacket, inputSubpacket);
 
                     if (!last) {
-                        setToQR = inputSubpacket;
-                        setByteArrayToPopupImageView(setToQR);
+                        setByteArrayToPopupImageView(inputSubpacket);
                     } else {
                         // Sync extension
+                        Log.d("ScanCodeActivity (handleResult): ", "event_list received: " + Arrays.toString(inputPacket));
                         event_list = inputPacket;
                         sync_extensions(event_list);
                         toneGenerator.startTone(AudioManager.STREAM_ALARM, 1500);
+                        onBackPressed();
                     }
                     break;
             }
@@ -465,7 +469,8 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
     // TODO: Calculate whether this is right.
     private byte[] getSubpacket(byte[] wholeArray, int i) {
         boolean last = (i+1)*(PACKETSIZE-1) >= wholeArray.length;
-
+        Log.d("ScanCodeActivity (getSubpacket)", "Trying to get subpacket of " + Arrays.toString(wholeArray));
+        Log.d("ScanCodeActivity (getSubpacket)", "i: " + i);
         byte[] subpacket;
         if (!last) {
             System.arraycopy(wholeArray, i * (PACKETSIZE-1), subpacket=new byte[PACKETSIZE], 1, PACKETSIZE - 1);
@@ -473,6 +478,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
             System.arraycopy(wholeArray, i * (PACKETSIZE-1), subpacket=new byte[wholeArray.length % (PACKETSIZE - 1)+1], 1, wholeArray.length % (PACKETSIZE - 1));
             subpacket[0] = (byte)1;
         }
+        Log.d("ScanCodeActivity (getSubpacket)", "Calculated subpacket: " + Arrays.toString(subpacket));
         return subpacket;
     }
 
@@ -613,11 +619,6 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
     private int setByteArrayToPopupImageView(byte[] binaryData) {
         MultiFormatWriter multiFormatWriter = new MultiFormatWriter();
         try {
-            // [-127, -125, 106, 100, 97, 118, 105, 100, 46, 112, 99,
-            // 97, 112, 88, 32, -6, 85, 62, -84, -80, 10, -115,
-            // -125, 8, -115, -75, 111, 121, 56, 26, 42, 100, 27,
-            // 44, -114, -114, 74, -5, -48, -21, 68, 4, -105, -44,
-            // -116, 24, -4, 2]
             String base64Text = Base64.encodeToString(binaryData, Base64.DEFAULT);
             Log.d("ScanCodeActivity", "Writing following base64Text to QR code view: " + base64Text);
             Log.d("ScanCodeActivity", "Writing following bytearray to QR code view: " + Arrays.toString(binaryData));
