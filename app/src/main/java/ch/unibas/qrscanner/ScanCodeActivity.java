@@ -244,13 +244,15 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
 
     private void initializePath() {
-        // TODO: Set appropriate path.
+        // TODO: Set appropriate path:
+        // data/data/com.chaquo.python.console/files
 
         // Create '/databases' directory in ch.unibas.qrscanner.files
         //path = getApplicationContext().getFilesDir().getPath();
         if (!path.substring(path.lastIndexOf("/")+1).equals("files")) {
             path += "/files";
         }
+        if (path.charAt(path.length()-1) != '/') { path += '/'; }
         path += dirName;
 
         File f = new File(path);
@@ -304,12 +306,14 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         if (device == 'A') {
             // TODO: implement this
             // Get i_have_list
-            PyObject i_have_list_py = transport.callAttr("get_i_have_list", path);
-            Log.d("ScanCodeActivity", "i_have_list: " + i_have_list_py);
+            i_have_list = get_i_have_list();
+            outputPacket = i_have_list;
 
-            byte[] i_have_list = pyObject2ByteArray(i_have_list_py);
-            Log.d("ScanCodeActivity", "i_have_list: " + Arrays.toString(i_have_list));
-            Log.d("ScanCodeActivity", "i_have_list length: " + i_have_list.length);
+            numSubpackets = getNumSubpackets(i_have_list);
+            arrayInQR = getSubpacket(i_have_list, 0);
+            i++;
+            setByteArrayToPopupImageView(arrayInQR);
+
         }
     }
 
@@ -317,68 +321,157 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
     byte[] inputPacket = new byte[0];
     byte[] outputSubpacket = new byte[0];
     byte[] outputPacket = new byte[0];
-    byte[] arrayInQR = new byte[0];
+    byte[] arrayInQR = new byte[0]; // 0H1
+
+    byte[] i_have_list;
+    byte[] i_want_list;
+    byte[] event_list;
+    PyObject extension_list_py;
 
     int i = 0;
     int step = 1;
     int numSubpackets;
 
     public void handleResult(Result result) {
-        inputSubpacket = decodeResult(result);
-        Log.d("ScanCodeActivity", "Start handling result: " + Arrays.toString(inputSubpacket));
-        boolean last = inputSubpacket[0] != 0;
 
+        onPause();
+        // Verify that QR code is new.
+        if (Arrays.equals(inputSubpacket, decodeResult(result))) {
+            Log.d("ScanCodeActivity (handleResult)", "Already received this packet: " + Arrays.toString(decodeResult(result)));
+            toneGenerator.startTone(AudioManager.STREAM_NOTIFICATION, 50);
+            onResume();
+            return;
+        }
+        toneGenerator.startTone(AudioManager.STREAM_ALARM, 50);
+        inputSubpacket = decodeResult(result);
+
+        Log.d("ScanCodeActivity (handleResult)", "Start handling new result: " + Arrays.toString(inputSubpacket));
+        boolean last = inputSubpacket[0] != 0;
 
 
         if (device == 'A') {
             switch (step) {
                 case 1:  // Send i_have_list to B
                     // TODO: implement this
-                    if (i == 0) {
-                        numSubpackets = (outputPacket.length / (PACKETSIZE - 1)) + 1;
+
+
+                    outputSubpacket = getSubpacket(outputPacket, i);
+                    setToQR = outputSubpacket;
+                    setByteArrayToPopupImageView(setToQR);
+
+                    Log.d("ScanCodeActivity (handleResult)", "Create i_have_list-packet to send (" + (i+1) + "/" + numSubpackets + "): " + Arrays.toString(outputSubpacket));
+
+                    i++;
+                    if (i >= numSubpackets+1) {
+                        step++;
+                        i = 0;
+                        inputPacket = new byte[0];
                     }
 
-                    Log.d("ScanCodeActivity", "Create packet to send (" + (i + 1) + "/" + numSubpackets + "): " + Arrays.toString(outputSubpacket));
 
                     break;
                 case 2:  // Receive i_want_list from B
                     // TODO: implement this
+                    inputPacket = arraySmartConcat(inputPacket, inputSubpacket);
+
+                    if (!last) {
+                        setToQR = inputSubpacket;
+                        setByteArrayToPopupImageView(setToQR);
+                    } else {  // last i_want_list-packet received
+                        event_list = get_event_list(inputPacket);
+                        outputPacket = event_list;
+                        numSubpackets = getNumSubpackets(outputPacket);
+                        outputSubpacket = getSubpacket(outputPacket, 0);
+                        setToQR = outputSubpacket;
+                        setByteArrayToPopupImageView(setToQR);
+                        i = 1;
+                        step++;
+                    }
 
                     break;
                 case 3:  // Send event_list to B
                     // TODO: implement this
+                    outputSubpacket = getSubpacket(event_list, i);
+                    setToQR = outputSubpacket;
+                    setByteArrayToPopupImageView(setToQR);
 
+                    i++;
+                    if (i >= numSubpackets+1) {
+                        step++;
+                        i = 0;
+                        inputPacket = new byte[0];
+                    }
                     break;
             }
         } else if (device == 'B') {
             switch (step) {
                 case 1:  // Receive i_have_list from A
                     // TODO: implement this
+                    inputPacket = arraySmartConcat(inputPacket, inputSubpacket);
 
+                    if (!last) {
+                        setToQR = inputSubpacket;
+                        setByteArrayToPopupImageView(setToQR);
+                    } else {  // last i_have_list subpacket received
+
+
+                        i_want_list = get_i_want_list(inputPacket);
+                        outputPacket = i_want_list;
+                        numSubpackets = getNumSubpackets(outputPacket);
+                        outputSubpacket = getSubpacket(outputPacket, 0);
+                        setToQR = outputSubpacket;
+                        setByteArrayToPopupImageView(setToQR);
+                        i = 1;
+
+                        step++;
+                    }
                     break;
                 case 2:  // Send i_want_list to A
-                    // TODO: implement this
+                    outputSubpacket = getSubpacket(i_want_list, i);
+                    setToQR = outputSubpacket;
+                    setByteArrayToPopupImageView(setToQR);
 
+                    i++;
+                    if (i >= numSubpackets+1) {
+                        step++;
+                        i = 0;
+                        inputPacket = new byte[0];
+                    }
                     break;
                 case 3:  // Receive event_list from A
-                    // TODO: implement this
+                    inputPacket = arraySmartConcat(inputPacket, inputSubpacket);
 
+                    if (!last) {
+                        setToQR = inputSubpacket;
+                        setByteArrayToPopupImageView(setToQR);
+                    } else {
+                        // Sync extension
+                        event_list = inputPacket;
+                        sync_extensions(event_list);
+                        toneGenerator.startTone(AudioManager.STREAM_ALARM, 1500);
+                    }
                     break;
             }
         } else {
             throw new IllegalArgumentException("Device should be 'A' or 'B'.");
         }
-        Log.d("ScanCodeActivity", "Finished handling result.");
+        Log.d("ScanCodeActivity (handleResult)", "Finished handling result.");
+
+        // TODO: maybe remove this?
+        //onPause();
+        onResume();
     }
 
     // TODO: Calculate whether this is right.
-    private byte[] getSubpacket(byte[] wholeArray, int i, boolean last) {
+    private byte[] getSubpacket(byte[] wholeArray, int i) {
+        boolean last = (i+1)*(PACKETSIZE-1) >= wholeArray.length;
+
         byte[] subpacket;
         if (!last) {
             System.arraycopy(wholeArray, i * (PACKETSIZE-1), subpacket=new byte[PACKETSIZE], 1, PACKETSIZE - 1);
         } else {
             System.arraycopy(wholeArray, i * (PACKETSIZE-1), subpacket=new byte[wholeArray.length % (PACKETSIZE - 1)+1], 1, wholeArray.length % (PACKETSIZE - 1));
-            output[0] = (byte)1;
+            subpacket[0] = (byte)1;
         }
         return subpacket;
     }
@@ -388,9 +481,51 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
     }
 
     private byte[] arraySmartConcat(byte[] original, byte[] add) {
+        Log.d("ScanCodeActivity (arraySmartConcat)", "Adding " + Arrays.toString(add));
+        Log.d("ScanCodeActivity (arraySmartConcat)", "to " + Arrays.toString(original));
+        if (add.length == 1) {
+            return original;
+        }
         original = Arrays.copyOf(original, original.length + add.length-1);
         System.arraycopy(add, 1, original, original.length - (add.length-1), add.length-1);
+        Log.d("ScanCodeActivity (arraySmartConcat)", "Result: " + Arrays.toString(original));
         return original;
+    }
+
+    private byte[] get_i_have_list() {
+        PyObject i_have_list_py = transport.callAttr("get_i_have_list", path);
+        Log.d("ScanCodeActivity", "i_have_list: " + i_have_list_py);
+
+        byte[] i_have_list_out = pyObject2ByteArray(i_have_list_py);
+        Log.d("ScanCodeActivity", "i_have_list: " + Arrays.toString(i_have_list_out));
+        Log.d("ScanCodeActivity", "i_have_list length: " + i_have_list_out.length);
+
+        return i_have_list_out;
+    }
+
+    private byte[] get_i_want_list(byte[] i_have_list) {
+        PyObject i_have_list_py = byteArray2PyObject(i_have_list);
+        PyObject i_want_list_and_extension_list = transport.callAttr("get_i_want_list", i_have_list_py, path);
+        PyObject i_want_list_py = i_want_list_and_extension_list.asList().get(0);
+        i_want_list = pyObject2ByteArray(i_want_list_py);
+        extension_list_py = i_want_list_and_extension_list.asList().get(1);
+        return i_want_list;
+    }
+
+    private byte[] get_event_list(byte[] i_want_list) {
+        PyObject i_want_list_py = byteArray2PyObject(i_want_list);
+        PyObject event_list_py = transport.callAttr("get_event_list", i_want_list_py, path);
+        event_list = pyObject2ByteArray(event_list_py);
+        return event_list;
+    }
+
+    private void sync_extensions(byte[] event_list) {
+        PyObject event_list_py = byteArray2PyObject(event_list);
+        transport.callAttr("sync_extensions", extension_list_py, event_list_py, path);
+    }
+
+    private int getNumSubpackets(byte[] arr) {
+        return (arr.length / (PACKETSIZE-1)) + 1;
     }
 
     /*
@@ -478,8 +613,14 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
     private int setByteArrayToPopupImageView(byte[] binaryData) {
         MultiFormatWriter multiFormatWriter = new MultiFormatWriter();
         try {
+            // [-127, -125, 106, 100, 97, 118, 105, 100, 46, 112, 99,
+            // 97, 112, 88, 32, -6, 85, 62, -84, -80, 10, -115,
+            // -125, 8, -115, -75, 111, 121, 56, 26, 42, 100, 27,
+            // 44, -114, -114, 74, -5, -48, -21, 68, 4, -105, -44,
+            // -116, 24, -4, 2]
             String base64Text = Base64.encodeToString(binaryData, Base64.DEFAULT);
             Log.d("ScanCodeActivity", "Writing following base64Text to QR code view: " + base64Text);
+            Log.d("ScanCodeActivity", "Writing following bytearray to QR code view: " + Arrays.toString(binaryData));
             BitMatrix bitMatrix = multiFormatWriter.encode(base64Text, BarcodeFormat.QR_CODE, qrSize, qrSize);
             BarcodeEncoder barcodeEncoder = new BarcodeEncoder();
             Bitmap bitmap = barcodeEncoder.createBitmap(bitMatrix);
