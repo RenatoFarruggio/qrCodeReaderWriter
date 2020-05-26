@@ -17,7 +17,7 @@
 ## Idea
 Implement an interface that allows two Android phones to send and receive QR codes between each other, using [Zxing](https://github.com/zxing/zxing) library. Synchronize any database from BACnet from an Android device to another Android device over qr codes.
 
-## API
+## ___API (out of date)___
 We offer the following API to group 12 (logSync) for sending and receiving messages over qr:
 ```java
    public byte[] rd_callback() // called when logSync wants to receive
@@ -29,7 +29,7 @@ In return, we will need a method to start logSync:
    startLogSync(rdcb, wrcb);
 ```
 
-## Execution
+## ___Execution (out of date)___
 Sequence of control will be as follows:
 * We start logSync server as part of the logic behind the UI:
 ```java
@@ -39,7 +39,7 @@ Control is then handed over to the python application (logSync).
 * logSync calls callback to receive or to send.  
 * logSync retains control until sync is completed.
 
-## Python-Example
+## ___Python-Example (out of date)___
 Code on python side should look like this:  
 ```python
    def startLogSync(rdcb, wrcb):
