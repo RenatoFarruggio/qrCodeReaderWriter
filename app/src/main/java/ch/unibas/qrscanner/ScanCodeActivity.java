@@ -44,23 +44,6 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
     int cameraID;
 
-    /*
-    int lastNum = 0;
-
-    byte[] output;
-    byte[] input;
-
-    final Object shouldUpdateQRMonitor = new Object();
-    volatile private boolean shouldUpdateQR;
-    volatile private byte[] setToQR;
-
-    final Object shouldReceiveMonitor = new Object();
-    volatile private boolean shouldReceive;
-    volatile private boolean SEND;
-    volatile private byte[] lastReceived;
-    volatile private byte[] wholeInput;
-     */
-
     private char device;
 
     private String path;
@@ -295,16 +278,25 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         }
     }
 
+
+    /**
+     * Synchronizes Database from device A to device B.
+     *  Steps:
+     *      1: A sending i_have_list to B
+     *      2: B sending i_want_list to A
+     *      3: A sending event_list to B
+     */
     byte[] inputSubpacket = new byte[0];
     byte[] inputPacket = new byte[0];
     byte[] outputSubpacket = new byte[0];
     byte[] outputPacket = new byte[0];
-    byte[] arrayInQR = new byte[0]; // 0H1
+    byte[] arrayInQR = new byte[0];
+    PyObject extension_list_py;
 
+    // Only needed for readability, they're aliases in code below
     byte[] i_have_list;
     byte[] i_want_list;
     byte[] event_list;
-    PyObject extension_list_py;
 
     int i = 0;
     int step = 1;
@@ -331,9 +323,6 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         if (device == 'A') {
             switch (step) {
                 case 1:  // Send i_have_list to B
-                    // TODO: implement this
-
-
                     outputSubpacket = getSubpacket(outputPacket, i);
                     setByteArrayToPopupImageView(outputSubpacket);
 
@@ -349,15 +338,16 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
                     break;
                 case 2:  // Receive i_want_list from B
-                    // TODO: implement this
                     inputPacket = arraySmartConcat(inputPacket, inputSubpacket);
 
                     if (!last) {
                         setByteArrayToPopupImageView(inputSubpacket);
                     } else {  // last i_want_list-packet received
                         Log.d("ScanCodeActivity (handleResult)", "i_want_list received: " + Arrays.toString(inputPacket));
+
                         event_list = get_event_list(inputPacket);
                         Log.d("ScanCodeActivity (handleResult)", "event_list to send: " + Arrays.toString(event_list));
+
                         outputPacket = event_list;
                         numSubpackets = getNumSubpackets(outputPacket);
                         outputSubpacket = getSubpacket(outputPacket, 0);
@@ -368,7 +358,6 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
                     break;
                 case 3:  // Send event_list to B
-                    // TODO: implement this
                     outputSubpacket = getSubpacket(event_list, i);
                     setByteArrayToPopupImageView(outputSubpacket);
 
@@ -383,7 +372,6 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         } else if (device == 'B') {
             switch (step) {
                 case 1:  // Receive i_have_list from A
-                    // TODO: implement this
                     inputPacket = arraySmartConcat(inputPacket, inputSubpacket);
 
                     if (!last) {
@@ -433,12 +421,9 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         }
         Log.d("ScanCodeActivity (handleResult)", "Finished handling result.");
 
-        // TODO: maybe remove this?
-        //onPause();
         onResume();
     }
 
-    // TODO: Calculate whether this is right.
     private byte[] getSubpacket(byte[] wholeArray, int i) {
         boolean last = (i+1)*(PACKETSIZE-1) >= wholeArray.length;
         Log.d("ScanCodeActivity (getSubpacket)", "Trying to get subpacket of " + Arrays.toString(wholeArray));
@@ -471,7 +456,8 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
     }
 
     private byte[] get_i_have_list() {
-        PyObject i_have_list_py = transport.call("get_i_have_list");
+        // TODO: remove Attr
+        PyObject i_have_list_py = transport.callAttr("get_i_have_list", "I am an Attribute");
         Log.d("ScanCodeActivity", "i_have_list: " + i_have_list_py);
 
         byte[] i_have_list_out = pyObject2ByteArray(i_have_list_py);
@@ -483,7 +469,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
     private byte[] get_i_want_list(byte[] i_have_list) {
         PyObject i_have_list_py = byteArray2PyObject(i_have_list);
-        PyObject i_want_list_and_extension_list = transport.callAttr("get_i_want_list", i_have_list_py, path);
+        PyObject i_want_list_and_extension_list = transport.call("get_i_want_list", i_have_list_py);
         PyObject i_want_list_py = i_want_list_and_extension_list.asList().get(0);
         i_want_list = pyObject2ByteArray(i_want_list_py);
         extension_list_py = i_want_list_and_extension_list.asList().get(1);
@@ -492,7 +478,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
     private byte[] get_event_list(byte[] i_want_list) {
         PyObject i_want_list_py = byteArray2PyObject(i_want_list);
-        PyObject event_list_py = transport.callAttr("get_event_list", i_want_list_py, path);
+        PyObject event_list_py = transport.call("get_event_list", i_want_list_py);
         event_list = pyObject2ByteArray(event_list_py);
         return event_list;
     }
