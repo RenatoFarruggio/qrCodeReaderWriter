@@ -3,6 +3,7 @@ apply plugin: 'com.chaquo.python'
 
 android {
     compileSdkVersion 29
+    // TODO: set to one single ndkVersion
     if (System.getProperty("os.name").equals("Windows 10")) {
         ndkVersion "21.1.6352462"
     } else {
@@ -11,7 +12,8 @@ android {
 
 
     defaultConfig {
-        applicationId "ch.unibas.qrscanner"
+        //applicationId "ch.unibas.qrscanner"
+        applicationId "ch.bacnet.qrlink"
         minSdkVersion 26
         targetSdkVersion 29
         versionCode 1

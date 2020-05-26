@@ -7,7 +7,7 @@
     android:orientation="vertical"
     android:gravity="center"
     android:keepScreenOn="true"
-    tools:context=".MainActivity">
+    tools:context="ch.bacnet.qrlink.MainActivity">
 
     <Button
         android:layout_width="wrap_content"

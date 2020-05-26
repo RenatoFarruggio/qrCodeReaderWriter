@@ -1,17 +1,20 @@
-package ch.unibas.qrscanner;
+package ch.bacnet.qrlink;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.Manifest;
 import android.app.Dialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.media.AudioManager;
 import android.media.ToneGenerator;
 import android.os.Bundle;
+import android.os.FileUtils;
 import android.util.Base64;
 import android.util.Log;
 import android.view.Window;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.chaquo.python.PyObject;
 import com.chaquo.python.Python;
@@ -22,11 +25,18 @@ import com.google.zxing.Result;
 import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 
+import ch.unibas.qrscanner.R;
+import io.reactivex.functions.Consumer;
 import me.dm7.barcodescanner.zxing.ZXingScannerView;
 
+import com.gun0912.tedpermission.TedPermissionResult;
 import com.journeyapps.barcodescanner.BarcodeEncoder;
+import com.tedpark.tedpermission.rx2.TedRx2Permission;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Arrays;
 
 //MainActivity.resultTextView.setText(result.getText()); // TODO: implement this for finished msg
@@ -53,18 +63,17 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getCameraPermission();
         cameraID = 1;
         scannerView = new ZXingScannerView(this);
         setContentView(scannerView);
 
         Intent intent = getIntent();
-        this.path = intent.getStringExtra("path");
         this.device = intent.getCharExtra("device", 'Z');
         this.PACKETSIZE = intent.getIntExtra("packetsize", 12);
 
 
         Log.d("ScanCodeActivity", "Started as device " + device);
-        Log.d("ScanCodeActivity", "Set path to " + path);
 
         toneGenerator = new ToneGenerator(AudioManager.STREAM_ALARM, 40);
 
@@ -280,7 +289,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
 
     /**
-     * Synchronizes Database from device A to device B.
+     * Synchronize Database from device A to device B.
      *  Steps:
      *      1: A sending i_have_list to B
      *      2: B sending i_want_list to A
@@ -490,6 +499,31 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
     private int getNumSubpackets(byte[] arr) {
         return (arr.length / (PACKETSIZE-1)) + 1;
+    }
+
+    private void getCameraPermission() {
+
+        TedRx2Permission.with(this)
+                .setRationaleTitle("Camera permission")
+                .setRationaleMessage("We need permission to use the camera in order to sync over QR.") // "we need permission for read contact and find your location"
+                .setPermissions(Manifest.permission.CAMERA)
+                .request()
+                .subscribe(new Consumer<TedPermissionResult>() {
+                    @Override
+                    public void accept(TedPermissionResult tedPermissionResult) throws Exception {
+                        if (tedPermissionResult.isGranted()) {
+                            Toast.makeText(ScanCodeActivity.this, "Camera Permission Granted", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(ScanCodeActivity.this,
+                                    "Camera Permission Denied\n" + tedPermissionResult.getDeniedPermissions().toString(), Toast.LENGTH_SHORT)
+                                    .show();
+                        }
+                    }
+                }, new Consumer<Throwable>() {
+                    @Override
+                    public void accept(Throwable throwable) throws Exception {
+                    }
+                });
     }
 
     /*
