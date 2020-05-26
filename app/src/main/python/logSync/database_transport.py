@@ -1,6 +1,5 @@
-import sync
+from logSync import database_sync as sync
 import cbor
-import pcap
 
 """
 TRANSPORT PROTOCOL:
@@ -31,14 +30,12 @@ Device A                                    Device B
 Device A creates a list of all files of a specific directory (later, it will be the database). 
 
 :return: list of files (every entry has [filename, feedID, seq number])
-:rtype: list
+:rtype: bytes (cbor)
 """
 
 
-def get_i_have_list(path='udpDir/'):
-    # TODO: Change directory to database
-    list_of_files = sync.create_list_of_files(path)  # 4
-    return cbor.dumps(list_of_files)
+def get_i_have_list(path="hello"):
+    return cbor.dumps(sync.create_list_of_feeds())
 
 
 """
@@ -46,11 +43,16 @@ Device B receives an "I HAVE"-list. It consists of information about all the fil
 directory. The "I HAVE"-list is used to compare it with the files of this device's specific directory (Comparing what
 does Device A have and what does Device B have). When it's done, it returns a list with the necessary extensions 
 (a list of the differences of both device's "I HAVE"-list).
+
+:param i_have_list: list of files (every entry has [filename, feedID, seq number])
+:type i_have_list: bytes (cbor)
+:return: list of the files of which we need the extensions ([filename, feedID, seq number (of device B!)])
+:rtype: bytes (cbor)
 """
 
 
-def get_i_want_list(i_have_list, path='udpDir/'):
-    list_of_extensions = sync.compare_files(cbor.loads(i_have_list), path)
+def get_i_want_list(i_have_list):
+    list_of_extensions = sync.compare_feeds(cbor.loads(i_have_list))
     return cbor.dumps(list_of_extensions), list_of_extensions
 
 
@@ -58,28 +60,24 @@ def get_i_want_list(i_have_list, path='udpDir/'):
 Device A receives an "I WANT"-list. It consists of the extensions that Device B needs. If the list is empty, it means
 that there are no differences of both directories, therefore Device B is up-to-date. Otherwise, Device A filters the
 necessary extensions and creates a list of it. 
+
+:param i_want_list: list of the files of which we need the extensions 
+:type i_want_list: bytes (cbor)
+:return: list with the extensions
+:rtype: bytes (cbor)
 """
 
 
-def get_event_list(i_want_list, path='udpDir/'):
+def get_event_list(i_want_list):
     list_with_necessary_extensions = cbor.loads(i_want_list)
     if not list_with_necessary_extensions:
-        print("The other device is up-to-date.")
-        return []
+        print("The other device is up-to-date")
+        return cbor.dumps([])
 
-    event_list = []
-    for file_info in list_with_necessary_extensions:
-        filename = file_info[0]
-        seq = file_info[2]
-
-        # TODO: Change directory to database
-        extension = pcap.get_meta_and_cont_bits(path + filename, seq)  # 10
-        event_list.append(extension)
-
+    event_list = sync.filter_events(list_with_necessary_extensions)
     return cbor.dumps(event_list)
 
-def sync_extensions(compared_files, extensions_files, path='udpDir/'):
-    sync.sync_extensions(compared_files, extensions_files, path)
+
 
 def get_bytes_from_tojava_pyobject(b):
     return bytes(b)
