@@ -91,11 +91,12 @@ All meeting notes are located in [the diary](https://github.com/cn-uofbasel/BACn
 * Rewrite [Execution](#execution)
 * Rewrite [Python-Example](#python-example)
 * Remote add this repo to BACnet and pull
-* Implement packet splitting
+* ~~Implement packet splitting~~
 * Write down theoretical advanced transport protocol
-* Implement advanced transport protocol
-* Write specifications for integration for group 10 KotlinUI
+* ~~Implement advanced transport protocol~~
+* Integrate updated logSync code
+* Integrate path of exKotlinUI 
 * Add 2 input variables for ScanCodeActivity. One for Path (by calling getApplicationContext().getFilesDir().getPath()), One for Device ('A' or 'B')
-* Get logSync to run successfully
-* (Fix audio errors)
+* ~~Get logSync to run successfully~~
+* Fix audio errors
 * (Figure out where "[ZeroHung]zrhung_get_config: Get config failed for wp[0x0008]" error is coming from)
