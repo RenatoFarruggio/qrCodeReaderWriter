@@ -25,7 +25,7 @@ import com.google.zxing.Result;
 import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 
-import ch.unibas.qrscanner.R;
+import ch.bacnet.qrlink.R;
 import io.reactivex.functions.Consumer;
 import me.dm7.barcodescanner.zxing.ZXingScannerView;
 
@@ -110,8 +110,8 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         Log.d("ScanCodeActivity", "Python initialized.");
 
         // Setup Path
-        initializePath();
-        Log.d("ScanCodeActivity", "Path initialized.");
+        //initializePath();
+        //Log.d("ScanCodeActivity", "Path initialized.");
 
         // initialize QR code:
         initializeQRCode();
@@ -466,7 +466,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
     private byte[] get_i_have_list() {
         // TODO: remove Attr
-        PyObject i_have_list_py = transport.callAttr("get_i_have_list", "I am an Attribute");
+        PyObject i_have_list_py = transport.callAttr("get_i_have_list", "WOLOLOO");
         Log.d("ScanCodeActivity", "i_have_list: " + i_have_list_py);
 
         byte[] i_have_list_out = pyObject2ByteArray(i_have_list_py);
@@ -494,7 +494,7 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
 
     private void sync_extensions(byte[] event_list) {
         PyObject event_list_py = byteArray2PyObject(event_list);
-        transport.callAttr("sync_extensions", extension_list_py, event_list_py, path);
+        transport.callAttr("sync_extensions", extension_list_py, event_list_py);
     }
 
     private int getNumSubpackets(byte[] arr) {

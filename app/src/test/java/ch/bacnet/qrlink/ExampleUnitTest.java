@@ -1,4 +1,4 @@
-package ch.unibas.qrscanner;
+package ch.bacnet.qrlink;
 
 import org.junit.Test;
 

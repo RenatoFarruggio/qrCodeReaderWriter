@@ -7,7 +7,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 
-import ch.unibas.qrscanner.R;
+import ch.bacnet.qrlink.R;
 
 public class MainActivity extends AppCompatActivity {
 
