@@ -430,6 +430,10 @@ public class ScanCodeActivity extends AppCompatActivity implements ZXingScannerV
         }
         Log.d("ScanCodeActivity (handleResult)", "Finished handling result.");
 
+        if (!qrPopupDialog.isShowing()) {
+            qrPopupDialog.show();
+        }
+
         onResume();
     }
 
